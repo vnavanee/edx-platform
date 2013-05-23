@@ -17,6 +17,7 @@ class PostData:
     def __init__(self, dict_data):
         self.dict_data = dict_data
 
+<<<<<<< HEAD
     def getlist(self, key):
         """Get data by key from `self.dict_data`."""
         return self.dict_data.get(key)
@@ -47,6 +48,8 @@ class LogicTest(unittest.TestCase):
         return json.loads(self.xmodule.handle_ajax(dispatch, data))
 
 
+=======
+>>>>>>> moves TestLogic to __init__.py
 class PollModuleTest(LogicTest):
     """Logic tests for Poll Xmodule."""
     descriptor_class = PollDescriptor
