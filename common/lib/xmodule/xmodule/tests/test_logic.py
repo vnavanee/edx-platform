@@ -5,10 +5,12 @@
 import json
 import unittest
 
+from lxml import etree
+
 from xmodule.poll_module import PollDescriptor
 from xmodule.conditional_module import ConditionalDescriptor
 from xmodule.word_cloud_module import WordCloudDescriptor
-from xmodule.tests import get_test_system
+from xmodule.videoalpha_module import VideoAlphaDescriptor
 
 class PostData:
     """Class which emulate postdata."""
@@ -121,6 +123,34 @@ class WordCloudModuleTest(LogicTest):
              {'text': 'cat', 'size': 12, 'percent': 54.0}]
         )
 
-        self.assertEqual(
-            100.0,
-            sum(i['percent'] for i in response['top_words']))
+        self.assertEqual(100.0, sum(i['percent'] for i in response['top_words']) )
+
+
+class VideoAlphaModuleTest(LogicTest):
+    descriptor_class = VideoAlphaDescriptor
+
+    raw_model_data = {
+        'data': '<videoalpha />'
+    }
+
+    def test_get_timeframe_no_parameters(self):
+        xmltree = etree.fromstring('<videoalpha>test</videoalpha>')
+        output = self.xmodule._get_timeframe(xmltree)
+        self.assertEqual(output, ('', ''))
+
+    def test_get_timeframe_with_one_parameter(self):
+        xmltree = etree.fromstring(
+            '<videoalpha start_time="00:04:07">test</videoalpha>'
+        )
+        output = self.xmodule._get_timeframe(xmltree)
+        self.assertEqual(output, (247, ''))
+
+    def test_get_timeframe_with_two_parameters(self):
+        xmltree = etree.fromstring(
+            '''<videoalpha
+                    start_time="00:04:07"
+                    end_time="13:04:39"
+                >test</videoalpha>'''
+        )
+        output = self.xmodule._get_timeframe(xmltree)
+        self.assertEqual(output, (247, 47079))

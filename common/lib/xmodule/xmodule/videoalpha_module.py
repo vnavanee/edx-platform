@@ -117,7 +117,7 @@ class VideoAlphaModule(VideoAlphaFields, XModule):
                 break
         return result
 
-    def get_timeframe(self, xmltree):
+    def _get_timeframe(self, xmltree):
         """ Converts 'start_time' and 'end_time' parameters in video tag to seconds.
         If there are no parameters, returns empty string. """
 
@@ -127,11 +127,11 @@ class VideoAlphaModule(VideoAlphaFields, XModule):
             if str_time is None:
                 return ''
             else:
-                obj_time = time.strptime(str_time, '%H:%M:%S')
+                x = time.strptime(s, '%H:%M:%S')
                 return datetime.timedelta(
-                    hours=obj_time.tm_hour,
-                    minutes=obj_time.tm_min,
-                    seconds=obj_time.tm_sec
+                    hours=x.tm_hour,
+                    minutes=x.tm_min,
+                    seconds=x.tm_sec
                 ).total_seconds()
 
         return parse_time(xmltree.get('start_time')), parse_time(xmltree.get('end_time'))
