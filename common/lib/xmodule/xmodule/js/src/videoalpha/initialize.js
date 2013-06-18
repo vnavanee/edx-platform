@@ -85,7 +85,7 @@ function (VideoPlayer) {
 
             availableQualities: ['hd720', 'hd1080', 'highres'],
 
-            qTipConfig = {
+            qTipConfig: {
                 position: {
                     my: 'top right',
                     at: 'top center'
