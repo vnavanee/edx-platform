@@ -56,14 +56,20 @@ class VideoAlphaModule(VideoAlphaFields, XModule):
     icon_class = 'video'
 
     js = {
-        'js': [resource_string(__name__, 'js/src/videoalpha/display/html5_video.js')],
-        'coffee':
-        [resource_string(__name__, 'js/src/time.coffee'),
-         resource_string(__name__, 'js/src/videoalpha/display.coffee')] +
-        [resource_string(__name__, 'js/src/videoalpha/display/' + filename)
-         for filename
-         in sorted(resource_listdir(__name__, 'js/src/videoalpha/display'))
-         if filename.endswith('.coffee')]}
+        'js': [
+            resource_string(__name__, 'js/src/videoalpha/helper_utils.js'),
+            resource_string(__name__, 'js/src/videoalpha/initialize.js'),
+            resource_string(__name__, 'js/src/videoalpha/html5_video.js'),
+            resource_string(__name__, 'js/src/videoalpha/video_player.js'),
+            resource_string(__name__, 'js/src/videoalpha/video_control.js'),
+            resource_string(__name__, 'js/src/videoalpha/video_quality_control.js'),
+            resource_string(__name__, 'js/src/videoalpha/video_progress_slider.js'),
+            resource_string(__name__, 'js/src/videoalpha/video_volume_control.js'),
+            resource_string(__name__, 'js/src/videoalpha/video_speed_control.js'),
+            resource_string(__name__, 'js/src/videoalpha/video_caption.js'),
+            resource_string(__name__, 'js/src/videoalpha/main.js')
+         ]
+    }
     css = {'scss': [resource_string(__name__, 'css/videoalpha/display.scss')]}
     js_module_name = "VideoAlpha"
 
