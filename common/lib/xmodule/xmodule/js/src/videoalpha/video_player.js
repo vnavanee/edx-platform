@@ -245,7 +245,7 @@ function (HTML5Video) {
 
     function onPause() {
         this.videoPlayer.log('pause_video',
-                             'currentTime': this.videoPlayer.currentTime);
+                             {'currentTime': this.videoPlayer.currentTime});
 
         clearInterval(this.videoPlayer.updateInterval);
         delete this.videoPlayer.updateInterval;
