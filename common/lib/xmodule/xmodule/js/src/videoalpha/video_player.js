@@ -28,7 +28,8 @@ function (HTML5Video) {
         state.videoPlayer.play                        = play.bind(state);
         state.videoPlayer.update                      = update.bind(state);
         state.videoPlayer.onSpeedChange               = onSpeedChange.bind(state);
-        state.videoPlayer.onSeek                      = onSeek.bind(state);
+        state.videoPlayer.onCaptionSeek               = onSeek.bind(state);
+        state.videoPlayer.onSlideSeek                 = onSeek.bind(state);
         state.videoPlayer.onEnded                     = onEnded.bind(state);
         state.videoPlayer.onPause                     = onPause.bind(state);
         state.videoPlayer.onPlay                      = onPlay.bind(state);
@@ -198,6 +199,12 @@ function (HTML5Video) {
             );
         }
         newSpeed = parseFloat(newSpeed).toFixed(2).replace(/\.00$/, '.0');
+        this.videoPlayer.log('speed_change_video', 
+                             {
+                              'current_time': this.videoPlayer.currentTime,
+                              'old_speed': this.speed,
+                              'new_speed': newSpeed
+                             });
         this.setSpeed(newSpeed, updateCookie);
 
         if (this.currentPlayerMode === 'html5' && !(state.browser.isFirefox && newSpeed === '1.0')) {
@@ -213,7 +220,13 @@ function (HTML5Video) {
         }
     }
 
-    function onSeek(time) {
+    function onSeek(event, time) {
+        this.videoPlayer.log('seek_video', 
+                             {
+                              'old_time': this.videoPlayer.currentTime,
+                              'new_time': time,
+                              'type': event.type
+                             });
         this.videoPlayer.player.seekTo(time, true);
 
         if (this.videoPlayer.isPlaying()) {
@@ -231,7 +244,8 @@ function (HTML5Video) {
     }
 
     function onPause() {
-        this.videoPlayer.log('pause_video');
+        this.videoPlayer.log('pause_video',
+                             'currentTime': this.videoPlayer.currentTime);
 
         clearInterval(this.videoPlayer.updateInterval);
         delete this.videoPlayer.updateInterval;
@@ -240,7 +254,8 @@ function (HTML5Video) {
     }
 
     function onPlay() {
-        this.videoPlayer.log('play_video');
+        this.videoPlayer.log('play_video', 
+                             {'currentTime': this.videoPlayer.currentTime});
 
         if (!this.videoPlayer.updateInterval) {
             this.videoPlayer.updateInterval = setInterval(this.videoPlayer.update, 200);
@@ -265,6 +280,8 @@ function (HTML5Video) {
 
     function onReady() {
         var availablePlaybackRates, baseSpeedSubs, _this;
+
+        this.videoPlayer.log('load_video');
 
         availablePlaybackRates = this.videoPlayer.player.getAvailablePlaybackRates();
         if ((this.currentPlayerMode === 'html5') && (this.videoType === 'youtube')) {
@@ -344,15 +361,21 @@ function (HTML5Video) {
         return duration;
     }
 
-    function log(eventName) {
+    function log(eventName, data) {
         var logInfo;
 
+        // Default parameters that always get logged.
         logInfo = {
-            'id':          this.id,
-            'code':        this.youtubeId(),
-            'currentTime': this.videoPlayer.currentTime,
-            'speed':       this.speed
+            'id':   this.id,
+            'code': this.youtubeId()
         };
+
+        // If extra parameters were passed to the log.
+        if (data) {
+            $.each(data, function(paramName, value) {
+                logInfo[paramName] = value;
+            });
+        }
 
         if (this.videoType === 'youtube') {
             logInfo.code = this.youtubeId();
