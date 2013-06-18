@@ -56,20 +56,14 @@ class VideoAlphaModule(VideoAlphaFields, XModule):
     icon_class = 'video'
 
     js = {
-        'js': [
-            resource_string(__name__, 'js/src/videoalpha/helper_utils.js'),
-            resource_string(__name__, 'js/src/videoalpha/initialize.js'),
-            resource_string(__name__, 'js/src/videoalpha/html5_video.js'),
-            resource_string(__name__, 'js/src/videoalpha/video_player.js'),
-            resource_string(__name__, 'js/src/videoalpha/video_control.js'),
-            resource_string(__name__, 'js/src/videoalpha/video_quality_control.js'),
-            resource_string(__name__, 'js/src/videoalpha/video_progress_slider.js'),
-            resource_string(__name__, 'js/src/videoalpha/video_volume_control.js'),
-            resource_string(__name__, 'js/src/videoalpha/video_speed_control.js'),
-            resource_string(__name__, 'js/src/videoalpha/video_caption.js'),
-            resource_string(__name__, 'js/src/videoalpha/main.js')
-        ]
-    }
+        'js': [resource_string(__name__, 'js/src/videoalpha/display/html5_video.js')],
+        'coffee':
+        [resource_string(__name__, 'js/src/time.coffee'),
+         resource_string(__name__, 'js/src/videoalpha/display.coffee')] +
+        [resource_string(__name__, 'js/src/videoalpha/display/' + filename)
+         for filename
+         in sorted(resource_listdir(__name__, 'js/src/videoalpha/display'))
+         if filename.endswith('.coffee')]}
     css = {'scss': [resource_string(__name__, 'css/videoalpha/display.scss')]}
     js_module_name = "VideoAlpha"
 
@@ -78,11 +72,6 @@ class VideoAlphaModule(VideoAlphaFields, XModule):
         xmltree = etree.fromstring(self.data)
         self.youtube_streams = xmltree.get('youtube')
         self.sub = xmltree.get('sub')
-
-        self.autoplay = xmltree.get('autoplay') or ''
-        if self.autoplay.lower() not in ['true', 'false']:
-            self.autoplay = 'true'
-
         self.position = 0
         self.show_captions = xmltree.get('show_captions', 'true')
         self.sources = {
@@ -158,7 +147,6 @@ class VideoAlphaModule(VideoAlphaFields, XModule):
             'youtube_streams': self.youtube_streams,
             'id': self.location.html_id(),
             'sub': self.sub,
-            'autoplay': self.autoplay,
             'sources': self.sources,
             'track': self.track,
             'display_name': self.display_name_with_default,
