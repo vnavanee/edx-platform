@@ -31,42 +31,40 @@ describe 'VideoAlpha', ->
           # spyOn(window.VideoAlpha.prototype, 'fetchMetadata').andCallFake ->
             # @metadata = metadata
           @state = new window.VideoAlpha '#example', @videosDefinition
-          console.log 'state is ', @state
 
         it 'check videoType', ->
           expect(@state.videoType).toEqual('youtube')
-          console.log 'This test is passing!'
 
         it 'reset the current video player', ->
           expect(window.OldVideoPlayerAlpha).toBeUndefined()
 
         it 'set the elements', ->
-          expect(@video.el).toBe '#video_id'
+          expect(@state.el).toBe '#video_id'
 
         it 'parse the videos', ->
-          expect(@video.videos).toEqual
+          expect(@state.videos).toEqual
             '0.75': @slowerSpeedYoutubeId
             '1.0': @normalSpeedYoutubeId
 
-        it 'fetch the video metadata', ->
-          expect(@video.fetchMetadata).toHaveBeenCalled
-          expect(@video.metadata).toEqual metadata
+        # it 'fetch the video metadata', ->
+          # expect(@state.fetchMetadata).toHaveBeenCalled
+          # expect(@state.metadata).toEqual metadata
 
         it 'parse available video speeds', ->
-          expect(@video.speeds).toEqual ['0.75', '1.0']
+          expect(@state.speeds).toEqual ['0.75', '1.0']
 
         it 'set current video speed via cookie', ->
-          expect(@video.speed).toEqual '0.75'
+          expect(@state.speed).toEqual '0.75'
 
         it 'store a reference for this video player in the element', ->
-          expect($('.video').data('video')).toEqual @video
+          expect($('.video').data('video')).toEqual @state
 
       describe 'when the Youtube API is already available', ->
         beforeEach ->
           @originalYT = window.YT
           window.YT = { Player: true }
-          spyOn(window, 'VideoPlayerAlpha').andReturn(@stubVideoPlayerAlpha)
-          @video = new VideoAlpha '#example', @videosDefinition
+          # spyOn(window, 'VideoPlayerAlpha').andReturn(@stubVideoPlayerAlpha)
+          @state = new window.VideoAlpha '#example', @videosDefinition
 
         afterEach ->
           window.YT = @originalYT
