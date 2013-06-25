@@ -28,12 +28,14 @@ describe 'VideoAlpha', ->
 
       describe 'by default', ->
         beforeEach ->
-          spyOn(window.VideoAlpha.prototype, 'fetchMetadata').andCallFake ->
-            @metadata = metadata
-          @video = new VideoAlpha '#example', @videosDefinition
+          # spyOn(window.VideoAlpha.prototype, 'fetchMetadata').andCallFake ->
+            # @metadata = metadata
+          @state = new window.VideoAlpha '#example', @videosDefinition
+          console.log 'state is ', @state
 
         it 'check videoType', ->
-          expect(@video.videoType).toEqual('youtube')
+          expect(@state.videoType).toEqual('youtube')
+          console.log 'This test is passing!'
 
         it 'reset the current video player', ->
           expect(window.OldVideoPlayerAlpha).toBeUndefined()
