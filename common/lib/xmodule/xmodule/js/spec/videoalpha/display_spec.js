@@ -12,148 +12,179 @@
         duration: 200
       }
     };
+
     beforeEach(function() {
       jasmine.stubRequests();
       window.onTouchBasedDevice = jasmine.createSpy('onTouchBasedDevice').andReturn(false);
       this.videosDefinition = '0.75:slowerSpeedYoutubeId,1.0:normalSpeedYoutubeId';
       this.slowerSpeedYoutubeId = 'slowerSpeedYoutubeId';
-      return this.normalSpeedYoutubeId = 'normalSpeedYoutubeId';
+      this.normalSpeedYoutubeId = 'normalSpeedYoutubeId';
     });
+
     afterEach(function() {
       window.OldVideoPlayerAlpha = void 0;
       window.onYouTubePlayerAPIReady = void 0;
-      return window.onHTML5PlayerAPIReady = void 0;
+      window.onHTML5PlayerAPIReady = void 0;
     });
+
     describe('constructor', function() {
       describe('YT', function() {
         beforeEach(function() {
           loadFixtures('videoalpha.html');
           this.stubVideoPlayerAlpha = jasmine.createSpy('VideoPlayerAlpha');
-          return $.cookie.andReturn('0.75');
+          $.cookie.andReturn('0.75');
         });
+
         describe('by default', function() {
           beforeEach(function() {
-            return this.state = new window.VideoAlpha('#example', this.videosDefinition);
+            this.state = new window.VideoAlpha('#example');
           });
+
           it('check videoType', function() {
-            return expect(this.state.videoType).toEqual('youtube');
+            expect(this.state.videoType).toEqual('youtube');
           });
+
           it('reset the current video player', function() {
-            return expect(window.OldVideoPlayerAlpha).toBeUndefined();
+            expect(window.OldVideoPlayerAlpha).toBeUndefined();
           });
+
           it('set the elements', function() {
-            return expect(this.state.el).toBe('#video_id');
+            expect(this.state.el).toBe('#video_id');
           });
+
           it('parse the videos', function() {
-            return expect(this.state.videos).toEqual({
+            expect(this.state.videos).toEqual({
               '0.75': this.slowerSpeedYoutubeId,
               '1.0': this.normalSpeedYoutubeId
             });
           });
+
           it('parse available video speeds', function() {
-            return expect(this.state.speeds).toEqual(['0.75', '1.0']);
+            expect(this.state.speeds).toEqual(['0.75', '1.0']);
           });
+
           it('set current video speed via cookie', function() {
-            return expect(this.state.speed).toEqual('0.75');
+            expect(this.state.speed).toEqual('0.75');
           });
-          return it('store a reference for this video player in the element', function() {
-            return expect($('.video').data('video')).toEqual(this.state);
-          });
+
+          //it('store a reference for this video player in the element', function() {
+            //expect($('.video').data('video')).toEqual(this.state);
+          //});
         });
+
         describe('when the Youtube API is already available', function() {
           beforeEach(function() {
             this.originalYT = window.YT;
             window.YT = {
               Player: true
             };
-            return this.state = new window.VideoAlpha('#example', this.videosDefinition);
+            this.state = new window.VideoAlpha('#example');
           });
+
           afterEach(function() {
-            return window.YT = this.originalYT;
+            window.YT = this.originalYT;
           });
-          return it('create the Video Player', function() {
+
+          it('create the Video Player', function() {
             expect(window.VideoPlayerAlpha).toHaveBeenCalledWith({
               video: this.video
             });
-            return expect(this.video.player).toEqual(this.stubVideoPlayerAlpha);
+            expect(this.video.player).toEqual(this.stubVideoPlayerAlpha);
           });
         });
+
         describe('when the Youtube API is not ready', function() {
           beforeEach(function() {
             this.originalYT = window.YT;
             window.YT = {};
-            return this.video = new VideoAlpha('#example', this.videosDefinition);
+            this.video = new VideoAlpha('#example');
           });
+
           afterEach(function() {
-            return window.YT = this.originalYT;
+            window.YT = this.originalYT;
           });
-          return it('set the callback on the window object', function() {
-            return expect(window.onYouTubePlayerAPIReady).toEqual(jasmine.any(Function));
+
+          it('set the callback on the window object', function() {
+            expect(window.onYouTubePlayerAPIReady).toEqual(jasmine.any(Function));
           });
         });
-        return describe('when the Youtube API becoming ready', function() {
+        
+        describe('when the Youtube API becoming ready', function() {
           beforeEach(function() {
             this.originalYT = window.YT;
             window.YT = {};
             spyOn(window, 'VideoPlayerAlpha').andReturn(this.stubVideoPlayerAlpha);
-            this.video = new VideoAlpha('#example', this.videosDefinition);
-            return window.onYouTubePlayerAPIReady();
+            this.video = new VideoAlpha('#example');
+            window.onYouTubePlayerAPIReady();
           });
+
           afterEach(function() {
-            return window.YT = this.originalYT;
+            window.YT = this.originalYT;
           });
-          return it('create the Video Player for all video elements', function() {
+
+          it('create the Video Player for all video elements', function() {
             expect(window.VideoPlayerAlpha).toHaveBeenCalledWith({
               video: this.video
             });
-            return expect(this.video.player).toEqual(this.stubVideoPlayerAlpha);
+            expect(this.video.player).toEqual(this.stubVideoPlayerAlpha);
           });
         });
       });
-      return describe('HTML5', function() {
+
+      describe('HTML5', function() {
+        var state;
+
         beforeEach(function() {
           loadFixtures('videoalpha_html5.html');
           this.stubVideoPlayerAlpha = jasmine.createSpy('VideoPlayerAlpha');
-          return $.cookie.andReturn('0.75');
+          $.cookie.andReturn('0.75');
         });
+
         describe('by default', function() {
           beforeEach(function() {
-            return this.state = new window.VideoAlpha('#example');
+            state = new window.VideoAlpha('#example');
           });
+
           afterEach(function() {
-            return this.state = void 0;
+            state = void 0;
           });
+
           it('check videoType', function() {
-            return expect(this.state.videoType).toEqual('html5');
+            expect(state.videoType).toEqual('html5');
           });
+
           it('reset the current video player', function() {
-            return expect(window.OldVideoPlayerAlpha).toBeUndefined();
+            expect(window.OldVideoPlayerAlpha).toBeUndefined();
           });
+
           it('set the elements', function() {
-            return expect(this.state.el).toBe('#video_id');
+            expect(state.el).toBe('#video_id');
           });
+
           it('parse the videos if subtitles exist', function() {
             var sub;
             sub = 'test_name_of_the_subtitles';
-            return expect(this.state.videos).toEqual({
+            expect(state.videos).toEqual({
               '0.75': sub,
               '1.0': sub,
               '1.25': sub,
               '1.5': sub
             });
           });
-          it('parse the videos if subtitles doesn\'t exist', function() {
+
+          it('parse the videos if subtitles do not exist', function() {
             var sub;
-            $('#example').find('.video').data('sub', '');
-            this.state = new window.VideoAlpha('#example');
+            $('#example').find('.videoalpha').data('sub', '');
+            state = new window.VideoAlpha('#example');
             sub = '';
-            return expect(this.state.videos).toEqual({
+            expect(state.videos).toEqual({
               '0.75': sub,
               '1.0': sub,
               '1.25': sub,
               '1.5': sub
             });
           });
+
           it('parse Html5 sources', function() {
             var html5Sources;
             html5Sources = {
@@ -161,17 +192,20 @@
               webm: 'test.webm',
               ogg: 'test.ogv'
             };
-            return expect(this.state.html5Sources).toEqual(html5Sources);
+            expect(state.html5Sources).toEqual(html5Sources);
           });
+
           it('parse available video speeds', function() {
             var speeds;
             speeds = jasmine.stubbedHtml5Speeds;
-            return expect(this.state.speeds).toEqual(speeds);
+            expect(state.speeds).toEqual(speeds);
           });
-          return it('set current video speed via cookie', function() {
-            return expect(this.state.speed).toEqual('0.75');
+
+          it('set current video speed via cookie', function() {
+            expect(state.speed).toEqual('0.75');
           });
         });
+
         describe('when the HTML5 API is already available', function() {
           beforeEach(function() {
             this.originalHTML5Video = window.HTML5Video;
@@ -179,148 +213,175 @@
               Player: true
             };
             spyOn(window, 'VideoPlayerAlpha').andReturn(this.stubVideoPlayerAlpha);
-            return this.video = new VideoAlpha('#example', this.videosDefinition);
+            this.video = new VideoAlpha('#example');
           });
+
           afterEach(function() {
-            return window.HTML5Video = this.originalHTML5Video;
+            window.HTML5Video = this.originalHTML5Video;
           });
-          return it('create the Video Player', function() {
+
+          it('create the Video Player', function() {
             expect(window.VideoPlayerAlpha).toHaveBeenCalledWith({
               video: this.video
             });
-            return expect(this.video.player).toEqual(this.stubVideoPlayerAlpha);
+            expect(this.video.player).toEqual(this.stubVideoPlayerAlpha);
           });
         });
+
         describe('when the HTML5 API is not ready', function() {
           beforeEach(function() {
             this.originalHTML5Video = window.HTML5Video;
             window.HTML5Video = {};
-            return this.video = new VideoAlpha('#example', this.videosDefinition);
+            this.video = new VideoAlpha('#example');
           });
+
           afterEach(function() {
-            return window.HTML5Video = this.originalHTML5Video;
+            window.HTML5Video = this.originalHTML5Video;
           });
-          return it('set the callback on the window object', function() {
-            return expect(window.onHTML5PlayerAPIReady).toEqual(jasmine.any(Function));
+
+          it('set the callback on the window object', function() {
+            expect(window.onHTML5PlayerAPIReady).toEqual(jasmine.any(Function));
           });
         });
-        return describe('when the HTML5 API becoming ready', function() {
+
+        describe('when the HTML5 API becoming ready', function() {
           beforeEach(function() {
             this.originalHTML5Video = window.HTML5Video;
             window.HTML5Video = {};
             spyOn(window, 'VideoPlayerAlpha').andReturn(this.stubVideoPlayerAlpha);
-            this.video = new VideoAlpha('#example', this.videosDefinition);
-            return window.onHTML5PlayerAPIReady();
+            this.video = new VideoAlpha('#example');
+            window.onHTML5PlayerAPIReady();
           });
+
           afterEach(function() {
-            return window.HTML5Video = this.originalHTML5Video;
+            window.HTML5Video = this.originalHTML5Video;
           });
-          return it('create the Video Player for all video elements', function() {
+
+          it('create the Video Player for all video elements', function() {
             expect(window.VideoPlayerAlpha).toHaveBeenCalledWith({
               video: this.video
             });
-            return expect(this.video.player).toEqual(this.stubVideoPlayerAlpha);
+            expect(this.video.player).toEqual(this.stubVideoPlayerAlpha);
           });
         });
       });
     });
+
     describe('youtubeId', function() {
       beforeEach(function() {
         loadFixtures('videoalpha.html');
         $.cookie.andReturn('1.0');
-        return this.video = new VideoAlpha('#example', this.videosDefinition);
+        this.video = new VideoAlpha('#example');
       });
+
       describe('with speed', function() {
-        return it('return the video id for given speed', function() {
+        it('return the video id for given speed', function() {
           expect(this.video.youtubeId('0.75')).toEqual(this.slowerSpeedYoutubeId);
-          return expect(this.video.youtubeId('1.0')).toEqual(this.normalSpeedYoutubeId);
+          expect(this.video.youtubeId('1.0')).toEqual(this.normalSpeedYoutubeId);
         });
       });
-      return describe('without speed', function() {
-        return it('return the video id for current speed', function() {
-          return expect(this.video.youtubeId()).toEqual(this.normalSpeedYoutubeId);
+
+      describe('without speed', function() {
+        it('return the video id for current speed', function() {
+          expect(this.video.youtubeId()).toEqual(this.normalSpeedYoutubeId);
         });
       });
     });
+
     describe('setSpeed', function() {
       describe('YT', function() {
         beforeEach(function() {
           loadFixtures('videoalpha.html');
-          return this.video = new VideoAlpha('#example', this.videosDefinition);
+          this.video = new VideoAlpha('#example');
         });
+
         describe('when new speed is available', function() {
           beforeEach(function() {
-            return this.video.setSpeed('0.75');
+            this.video.setSpeed('0.75');
           });
+
           it('set new speed', function() {
-            return expect(this.video.speed).toEqual('0.75');
+            expect(this.video.speed).toEqual('0.75');
           });
-          return it('save setting for new speed', function() {
-            return expect($.cookie).toHaveBeenCalledWith('video_speed', '0.75', {
+
+          it('save setting for new speed', function() {
+            expect($.cookie).toHaveBeenCalledWith('video_speed', '0.75', {
               expires: 3650,
               path: '/'
             });
           });
         });
-        return describe('when new speed is not available', function() {
+
+        describe('when new speed is not available', function() {
           beforeEach(function() {
-            return this.video.setSpeed('1.75');
+            this.video.setSpeed('1.75');
           });
-          return it('set speed to 1.0x', function() {
-            return expect(this.video.speed).toEqual('1.0');
+
+          it('set speed to 1.0x', function() {
+            expect(this.video.speed).toEqual('1.0');
           });
         });
       });
-      return describe('HTML5', function() {
+
+      describe('HTML5', function() {
         beforeEach(function() {
           loadFixtures('videoalpha_html5.html');
-          return this.video = new VideoAlpha('#example', this.videosDefinition);
+          this.video = new VideoAlpha('#example');
         });
+
         describe('when new speed is available', function() {
           beforeEach(function() {
-            return this.video.setSpeed('0.75');
+            this.video.setSpeed('0.75');
           });
+
           it('set new speed', function() {
-            return expect(this.video.speed).toEqual('0.75');
+            expect(this.video.speed).toEqual('0.75');
           });
-          return it('save setting for new speed', function() {
-            return expect($.cookie).toHaveBeenCalledWith('video_speed', '0.75', {
+
+          it('save setting for new speed', function() {
+            expect($.cookie).toHaveBeenCalledWith('video_speed', '0.75', {
               expires: 3650,
               path: '/'
             });
           });
         });
-        return describe('when new speed is not available', function() {
+
+        describe('when new speed is not available', function() {
           beforeEach(function() {
-            return this.video.setSpeed('1.75');
+            this.video.setSpeed('1.75');
           });
-          return it('set speed to 1.0x', function() {
-            return expect(this.video.speed).toEqual('1.0');
+
+          it('set speed to 1.0x', function() {
+            expect(this.video.speed).toEqual('1.0');
           });
         });
       });
     });
+
     describe('getDuration', function() {
       beforeEach(function() {
         loadFixtures('videoalpha.html');
-        return this.video = new VideoAlpha('#example', this.videosDefinition);
+        this.video = new VideoAlpha('#example');
       });
-      return it('return duration for current video', function() {
-        return expect(this.video.getDuration()).toEqual(200);
+
+      it('return duration for current video', function() {
+        expect(this.video.getDuration()).toEqual(200);
       });
     });
-    return describe('log', function() {
+
+    describe('log', function() {
       beforeEach(function() {
         loadFixtures('videoalpha.html');
-        this.video = new VideoAlpha('#example', this.videosDefinition);
+        this.video = new VideoAlpha('#example');
         spyOn(Logger, 'log');
-        return this.video.log('someEvent', {
+        this.video.log('someEvent', {
           currentTime: 25,
           speed: '1.0'
         });
       });
-      return it('call the logger with valid extra parameters', function() {
-        return expect(Logger.log).toHaveBeenCalledWith('someEvent', {
+
+      it('call the logger with valid extra parameters', function() {
+        expect(Logger.log).toHaveBeenCalledWith('someEvent', {
           id: 'id',
           code: this.normalSpeedYoutubeId,
           currentTime: 25,
@@ -329,5 +390,4 @@
       });
     });
   });
-
 }).call(this);
