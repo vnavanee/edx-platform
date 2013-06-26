@@ -93,7 +93,7 @@ function (HTML5Video) {
         // http://code.google.com/p/gdata-issues/issues/detail?id=4654
         // When the YouTube team fixes the API bug, we can remove this temporary
         // bug fix.
-        state.browser.isFirefox = navigator.userAgent.toLowerCase().indexOf('firefox') > -1
+        state.browserIsFirefox = navigator.userAgent.toLowerCase().indexOf('firefox') > -1
         if (state.videoType === 'html5') {
             state.videoPlayer.player = new HTML5Video.Player(state.el, {
                 playerVars:   state.videoPlayer.playerVars,
@@ -207,7 +207,7 @@ function (HTML5Video) {
                              });
         this.setSpeed(newSpeed, updateCookie);
 
-        if (this.currentPlayerMode === 'html5' && !(state.browser.isFirefox && newSpeed === '1.0')) {
+        if (this.currentPlayerMode === 'html5' && !(state.browserIsFirefox && newSpeed === '1.0')) {
             this.videoPlayer.player.setPlaybackRate(newSpeed);
         } else { // if (this.currentPlayerMode === 'flash') {
             if (this.videoPlayer.isPlaying()) {
