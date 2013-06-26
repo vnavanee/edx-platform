@@ -209,7 +209,7 @@ function (VideoPlayer) {
 
 
     function parseYoutubeStreams(state, youtubeStreams) {
-        if (!youtubeStreams.length) {
+        if (typeof youtubeStreams === 'undefined' || youtubeStreams.length === 0) {
             return false;
         }
 
