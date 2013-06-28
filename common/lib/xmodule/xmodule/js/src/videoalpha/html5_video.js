@@ -301,7 +301,7 @@ function () {
         BUFFERING: 3,
         CUED: 5
     };
-alert(HTML5Video);
+
     // HTML5Video object - what this module exports.
     return HTML5Video;
 })
