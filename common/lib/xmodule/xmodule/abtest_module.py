@@ -59,7 +59,11 @@ class ABTestModule(ABTestFields, XModule):
 
     @group.setter
     def group(self, value):
-        self.group_assignments[self.experiment] = value
+        # self.group_assignments is the front-end to a database, so in order
+        # change it, we need to do a direct assignment.
+        temp_dict = self.group_assignments
+        temp_dict[self.experiment] = value
+        self.group_assignments = temp_dict
 
     @group.deleter
     def group(self):
@@ -129,7 +133,6 @@ class ABTestDescriptor(ABTestFields, RawDescriptor, XmlDescriptor):
             raise InvalidDefinitionError("ABTest portions must add up to less than or equal to 1")
 
         group_portions[DEFAULT] = default_portion
-        children.sort()
 
         return {
             'group_portions': group_portions,
