@@ -220,22 +220,23 @@ def compute_graded_total(section, student, course_id, model_data_cache, request)
                 #We simply cannot grade a problem that is 12/0, because we might need it as a percentage
                 graded = False
 
+            attempted = find_attempted(module_descriptor, model_data_cache, student.id)
+
             if settings.GENERATE_PROFILE_SCORES:    # for debugging!
                 if total > 1:
                     correct = random.randrange(max(total - 2, 1), total + 1)
                 else:
                     correct = total
 
-            scores.append(Score(correct, total, graded, module_descriptor.display_name_with_default))
+            scores.append(Score(correct, total, graded, module_descriptor.display_name_with_default, attempted))
 
         _, graded_total = graders.aggregate_scores(scores, section_name)
 
         raw_scores += scores
     else:
-        graded_total = Score(0.0, 1.0, True, section_name)
+        graded_total = Score(0.0, 1.0, True, section_name, False)
 
     return graded_total, raw_scores
-
 
 
 def find_should_grade_section(xmoduledescriptors, model_data_cache, student_id):
