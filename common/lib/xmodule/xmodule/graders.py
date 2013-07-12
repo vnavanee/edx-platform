@@ -269,15 +269,16 @@ class SingleSectionGrader(CourseGrader):
                 earned=float(earned),
                 possible=float(possible)
             )
-            if attempted:
-                projected_percent = percent
-            else:
-                projected_percent = None
+            projected_percent = percent
+            # if attempted:
+            #     projected_percent = percent
+            # else:
+            #     projected_percent = None
 
         else:
             percent = 0.0
             detail = "{name} - 0% (?/?)".format(name=self.name)
-            projected_percent = None
+            projected_percent = percent  # None
 
         breakdown = [{
             'percent': percent,
