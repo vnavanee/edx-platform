@@ -8,7 +8,7 @@ from subprocess import Popen, PIPE
 
 from django.conf import settings
 from django.contrib.auth.models import User, Group
-from django.core.mail import EmailMultiAlternatives, get_connection
+from django.core.mail import EmailMultiAlternatives, get_connection, send_mail
 from django.http import Http404
 from celery import task, current_task
 
@@ -19,8 +19,9 @@ from mitxmako.shortcuts import render_to_string
 
 log = logging.getLogger(__name__)
 
+MAX_EMAILS_PER_QUERY = 5000 # should be a multiple of settings.EMAILS_PER_TASK
 
-@task()
+#@task()
 def delegate_email_batches(hash_for_msg, recipient, course_id, course_url, user_id):
     '''
     Delegates emails by querying for the list of recipients who should
@@ -56,16 +57,35 @@ def delegate_email_batches(hash_for_msg, recipient, course_id, course_url, user_
             recipient_qset = recipient_qset | enrollment_qset
         recipient_qset = recipient_qset.distinct()
 
-    recipient_list = list(recipient_qset)
+    #recipient_list = list(recipient_qset)
     total_num_emails = recipient_qset.count()
-    num_workers = int(math.ceil(float(total_num_emails) / float(settings.EMAILS_PER_TASK)))
-    chunk = int(math.ceil(float(total_num_emails) / float(num_workers)))
+    #num_workers = int(math.ceil(float(total_num_emails) / float(settings.EMAILS_PER_TASK)))
+    #chunk = int(math.ceil(float(total_num_emails) / float(num_workers)))
+    num_queries = int(math.ceil(float(total_num_emails) / float(MAX_EMAILS_PER_QUERY)))
 
-    for i in range(num_workers):
-        to_list = recipient_list[i * chunk:i * chunk + chunk]
-        course_email.delay(hash_for_msg, to_list, course.display_name, course_url, False)
+    num_workers = 0
+    for j in range(num_queries):
+        recipient_sublist = list(recipient_qset[j*MAX_EMAILS_PER_QUERY:(j+1)*MAX_EMAILS_PER_QUERY])
+        num_emails_this_query = len(recipient_sublist)
+        num_tasks_this_query = int(math.ceil(float(num_emails_this_query) / float(settings.EMAILS_PER_TASK)))
+        chunk = int(math.ceil(float(num_emails_this_query) / float(num_tasks_this_query)))
+        for i in range(num_tasks_this_query):
+            to_list = recipient_sublist[i * chunk:i * chunk + chunk]
+            test_email(hash_for_msg, to_list, course.display_name, course_url, False)
+        num_workers += num_tasks_this_query
+
     return num_workers
 
+def test_email(hash_for_msg, to_list, course_title, course_url, throttle=False):
+    try:
+        msg = CourseEmail.objects.get(hash=hash_for_msg)
+    except CourseEmail.DoesNotExist as exc:
+        log.exception(exc.args[0])
+        raise exc
+
+    subject = "[" + course_title + "] " + msg.subject
+    body = msg.html_message
+    send_mail(subject, body, "jbau@stanford.edu", [i['email'] for i in to_list])
 
 @task(default_retry_delay=15, max_retries=5)
 def course_email(hash_for_msg, to_list, course_title, course_url, throttle=False):
