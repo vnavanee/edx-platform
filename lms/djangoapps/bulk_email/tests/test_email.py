@@ -29,7 +29,7 @@ class TestEmail(ModuleStoreTestCase):
         self.staff = [UserFactory() for _ in xrange(STAFF_COUNT)]
         staff_group = GroupFactory()
         for staff in self.staff:
-            staff_group.user_set.add(staff)
+            staff_group.user_set.add(staff)  # pylint: disable=E1101
 
         #create students
         self.students = [UserFactory() for _ in xrange(STUDENT_COUNT)]

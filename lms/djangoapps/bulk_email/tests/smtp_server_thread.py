@@ -1,10 +1,14 @@
+"""
+Defines a class for a thread that runs a Fake SMTP server, used for testing
+error handling from sending email.
+"""
 import threading
 from bulk_email.tests.fake_smtp import FakeSMTPServer
 
 
 class FakeSMTPServerThread(threading.Thread):
     """
-    Thread for running a fake SMTP server for testing email
+    Thread for running a fake SMTP server
     """
     def __init__(self, host, port):
         self.host = host
@@ -34,6 +38,6 @@ class FakeSMTPServerThread(threading.Thread):
             self.server = FakeSMTPServer((self.host, self.port), None)
             self.is_ready.set()
             self.server.serve_forever()
-        except Exception, e:
-            self.error = e
+        except Exception, exc:  # pylint: disable=W0703
+            self.error = exc
             self.is_ready.set()

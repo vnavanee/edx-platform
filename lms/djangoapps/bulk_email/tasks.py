@@ -38,9 +38,9 @@ def delegate_email_batches(hash_for_msg, recipient, course_id, course_url, user_
         raise Exception("get_course_by_id failed: " + exc.args[0])
 
     try:
-        email = CourseEmail.objects.get(hash=hash_for_msg)        
+        email = CourseEmail.objects.get(hash=hash_for_msg)
     except CourseEmail.DoesNotExist as exc:
-        log.warning("Failed to get CourseEmail with hash %s, retry %d" % (hash_for_msg, current_task.request.retries))
+        log.warning("Failed to get CourseEmail with hash %s, retry %d", hash_for_msg, current_task.request.retries)
         raise delegate_email_batches.retry(arg=[hash_for_msg, recipient, course_id, course_url, user_id], exc=exc)
 
     if recipient == "myself":
