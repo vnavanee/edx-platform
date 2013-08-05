@@ -500,6 +500,9 @@ MIDDLEWARE_CLASSES = (
 
     # catches any uncaught RateLimitExceptions and returns a 403 instead of a 500
     'ratelimitbackend.middleware.RateLimitMiddleware',
+
+    # For A/B testing
+    'waffle.middleware.WaffleMiddleware',
 )
 
 ############################### Pipeline #######################################
@@ -742,7 +745,7 @@ INSTALLED_APPS = (
     'external_auth',
     'django_openid_auth',
 
-    #For the wiki
+    # For the wiki
     'wiki',  # The new django-wiki from benjaoming
     'django_notify',
     'course_wiki',  # Our customizations
@@ -755,6 +758,9 @@ INSTALLED_APPS = (
 
     # foldit integration
     'foldit',
+
+    # For A/B testing
+    'waffle',
 
     # For testing
     'django.contrib.admin',  # only used in DEBUG mode
