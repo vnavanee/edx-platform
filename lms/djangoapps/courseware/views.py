@@ -551,8 +551,7 @@ def static_tab(request, course_id, tab_slug):
                               {'course': course,
                                'tab': tab,
                                'tab_contents': contents,
-                               'staff_access': staff_access, 
-                               'request': request, })
+                               'staff_access': staff_access, })
 
 # TODO arjun: remove when custom tabs in place, see courseware/syllabus.py
 

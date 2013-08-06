@@ -13,6 +13,7 @@ def url_class(is_active):
 %>
 <%! from courseware.tabs import get_course_tabs %>
 <%! from django.utils.translation import ugettext as _ %>
+<% import waffle %>
 
 <nav class="${active_page} course-material">
   <div class="inner-wrapper">
@@ -21,11 +22,16 @@ def url_class(is_active):
           <li>
              <a href="${tab.link | h}" class="${url_class(tab.is_active)}">
                  ${tab.name | h}
+                 % if waffle.flag_is_active(request, 'ab_testing'):
+                   % if tab.name == "Courseware":
+                     <div style="width:100%;height:100%;border:1px solid #F00;"></div>
+                   % endif
+                 % endif
                  % if tab.is_active == True:
-                  <span class="sr">, current location</span>
+                   <span class="sr">, current location</span>
                  %endif
                  % if tab.has_img == True:
-                    <img src="${tab.img}"/>
+                   <img src="${tab.img}"/>
                  %endif
              </a>
           </li>
