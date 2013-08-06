@@ -61,6 +61,9 @@ urlpatterns = ('',  # nopep8
     url(r'^heartbeat$', include('heartbeat.urls')),
 
     url(r'^user_api/', include('user_api.urls')),
+
+    # For Waffle in JS
+    url(r'^', include('waffle.urls')),
 )
 
 js_info_dict = {

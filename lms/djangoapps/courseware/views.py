@@ -39,8 +39,6 @@ from xmodule.course_module import CourseDescriptor
 
 import comment_client
 
-import waffle
-
 log = logging.getLogger("mitx.courseware")
 
 template_imports = {'urllib': urllib}
@@ -553,7 +551,8 @@ def static_tab(request, course_id, tab_slug):
                               {'course': course,
                                'tab': tab,
                                'tab_contents': contents,
-                               'staff_access': staff_access, })
+                               'staff_access': staff_access, 
+                               'request': request, })
 
 # TODO arjun: remove when custom tabs in place, see courseware/syllabus.py
 
@@ -725,9 +724,6 @@ def submission_history(request, course_id, student_username, location):
     Right now this only works for problems because that's all
     StudentModuleHistory records.
     """
-
-    # if waffle.flag_is_active(request, 'ab_testing'):
-    #     raise PermissionDenied
 
     course = get_course_with_access(request.user, course_id, 'load')
     staff_access = has_access(request.user, course, 'staff')
