@@ -6,7 +6,28 @@ in roughly chronological order, most recent first.  Add your entries at or near
 the top.  Include a label indicating the component affected.
 
 LMS: Added bulk email for course feature, with option to optout of individual
-course emails.
+
+Common: Added ratelimiting to our authentication backend.
+
+Common: Add additional logging to cover login attempts and logouts.
+
+Studio: Send e-mails to new Studio users (on edge only) when their course creator
+status has changed. This will not be in use until the course creator table
+is enabled.
+
+Studio: Added improvements to Course Creation: richer error messaging, tip
+text, and fourth field for course run.
+
+Blades: New features for VideoAlpha player:
+1.) Controls are auto hidden after a delay of mouse inactivity - the full video
+becomes visible.
+2.) When captions (CC) button is pressed, captions stick (not auto hidden after
+a delay of mouse inactivity). The video player size does not change - the video
+is down-sized and placed in the middle of the black area.
+3.) All source code of Video Alpha 2 is written in JavaScript. It is not a basic
+conversion from CoffeeScript. The structure of the player has been changed.
+4.) A lot of additional unit tests.
+>>>>>>> 7237f8026f3057a328d8d4af996f6d8729f0c6b3
 
 LMS: Added user preferences (arbitrary user/key/value tuples, for which
 which user/key is unique) and a REST API for reading users and
@@ -16,6 +37,9 @@ the setting is not present, the API is disabled).
 
 LMS: Added endpoints for AJAX requests to enable/disable notifications
 (which are not yet implemented) and a one-click unsubscribe page.
+
+Studio: Allow instructors of a course to designate other staff as instructors;
+this allows instructors to hand off management of a course to someone else.
 
 Common: Add a manage.py that knows about edx-platform specific settings and projects
 
