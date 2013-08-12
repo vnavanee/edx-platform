@@ -17,6 +17,7 @@ def add_unit(step):
 
 @step(u'I add the following components:')
 def add_components(step):
+    world.wait_for_xmodule()
     for component in [step_hash['Component'] for step_hash in step.hashes]:
         assert component in COMPONENT_DICTIONARY
         for css in COMPONENT_DICTIONARY[component]['steps']:

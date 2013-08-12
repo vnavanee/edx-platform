@@ -74,18 +74,15 @@ def xml_only_video(step):
     # Create a new Video component, but ensure that it doesn't have
     # metadata. This allows us to test that we are correctly parsing
     # out XML
-    video = world.ItemFactory.create(
+    world.ItemFactory.create(
         parent_location=parent_location,
         category='video',
         data='<video youtube="1.00:%s"></video>' % youtube_id
     )
 
-    # Refresh to see the new video
-    reload_the_page(step)
-
 
 @step('The correct Youtube video is shown')
 def the_youtube_video_is_shown(_step):
+    world.wait_for_xmodule()
     ele = world.css_find('.video').first
     assert ele['data-streams'].split(':')[1] == world.scenario_dict['YOUTUBE_ID']
-
