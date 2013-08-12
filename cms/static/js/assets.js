@@ -1,3 +1,6 @@
+require(["jquery", "gettext", "mustache", "js/views/feedback_prompt", "js/views/feedback_notification"],
+        function($, gettext, Mustache, PromptView, NotificationView) {
+
 $(document).ready(function() {
     $('.uploads .upload-button').bind('click', showUploadModal);
     $('.upload-modal .close-button').bind('click', hideModal);
@@ -9,7 +12,7 @@ function removeAsset(e){
     e.preventDefault();
 
     var that = this;
-    var msg = new CMS.Views.Prompt.Warning({
+    var msg = new PromptView.Warning({
         title: gettext("Delete File Confirmation"),
         message: gettext("Are you sure you wish to delete this item. It cannot be reversed!\n\nAlso any content that links/refers to this item will no longer work (e.g. broken images and/or links)"),
         actions: {
@@ -23,7 +26,7 @@ function removeAsset(e){
                         { 'location': row.data('id') },
                         function() {
                             // show the post-commit confirmation
-                            var deleted = new CMS.Views.Notification.Confirmation({
+                            var deleted = new NotificationView.Confirmation({
                                 title: gettext("Your file has been deleted."),
                                 closeIcon: false,
                                 maxShown: 2000
@@ -55,6 +58,20 @@ function showUploadModal(e) {
     $modal = $('.upload-modal').show();
     $('.file-input').bind('change', startUpload);
     $modalCover.show();
+}
+
+function hideModal(e) {
+    if (e) {
+        e.preventDefault();
+    }
+    // Unit editors do not want the modal cover to hide when users click outside
+    // of the editor. Users must press Cancel or Save to exit the editor.
+    // module_edit adds and removes the "is-fixed" class.
+    if (!$modalCover.hasClass("is-fixed")) {
+        $('.file-input').unbind('change', startUpload);
+        $modal.hide();
+        $modalCover.hide();
+    }
 }
 
 function showFileSelectionMenu(e) {
@@ -90,6 +107,11 @@ function showUploadFeedback(event, position, total, percentComplete) {
     $('.upload-modal .progress-fill').html(percentVal);
 }
 
+function markAsLoaded() {
+    $('.upload-modal .copy-button').css('display', 'inline-block');
+    $('.upload-modal .progress-bar').addClass('loaded');
+}
+
 function displayFinishedUpload(xhr) {
     if (xhr.status == 200) {
         markAsLoaded();
@@ -118,3 +140,5 @@ function displayFinishedUpload(xhr) {
         'asset_url': resp.url
     });
 }
+
+}); // end require()

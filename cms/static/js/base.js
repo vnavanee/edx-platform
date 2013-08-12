@@ -1,4 +1,6 @@
-if (!window.CmsUtils) window.CmsUtils = {};
+require(["jquery", "underscore", "gettext", "js/views/feedback_notification", "js/views/feedback_prompt",
+         "jquery.ui", "jquery.timepicker", "jquery.leanmodal", "jquery.form"],
+    function($, _, gettext, NotificationView, PromptView) {
 
 var $body;
 var $modal;
@@ -95,7 +97,7 @@ $(document).ready(function() {
     $('a[rel*="view"][href^="#"]').bind('click', smoothScrollLink);
 
     // tender feedback window scrolling
-    $('a.show-tender').bind('click', window.CmsUtils.smoothScrollTop);
+    $('a.show-tender').bind('click', smoothScrollTop);
 
     // toggling footer additional support
     $('.cta-show-sock').bind('click', toggleSock);
@@ -169,10 +171,7 @@ function smoothScrollLink(e) {
     });
 }
 
-// On AWS instances, this base.js gets wrapped in a separate scope as part of Django static
-// pipelining (note, this doesn't happen on local runtimes). So if we set it on window,
-//  when we can access it from other scopes (namely Course Advanced Settings).
-window.CmsUtils.smoothScrollTop = function(e) {
+function smoothScrollTop(e) {
     (e).preventDefault();
 
     $.smoothScroll({
@@ -378,7 +377,7 @@ function deleteSection(e) {
 }
 
 function _deleteItem($el, type) {
-    var confirm = new CMS.Views.Prompt.Warning({
+    var confirm = new PromptView.Warning({
         title: gettext('Delete this ' + type + '?'),
         message: gettext('Deleting this ' + type + ' is permanent and cannot be undone.'),
         actions: {
@@ -394,7 +393,7 @@ function _deleteItem($el, type) {
                         'id': id
                     });
 
-                    var deleting = new CMS.Views.Notification.Mini({
+                    var deleting = new NotificationView.Mini({
                         title: gettext('Deleting') + '&hellip;'
                     });
                     deleting.show();
@@ -419,11 +418,6 @@ function _deleteItem($el, type) {
         }
     });
     confirm.show();
-}
-
-function markAsLoaded() {
-    $('.upload-modal .copy-button').css('display', 'inline-block');
-    $('.upload-modal .progress-bar').addClass('loaded');
 }
 
 function hideModal(e) {
@@ -792,7 +786,7 @@ function saveSetSectionScheduleDate(e) {
         'start': datetime
     });
 
-    var saving = new CMS.Views.Notification.Mini({
+    var saving = new NotificationView.Mini({
         title: gettext("Saving") + "&hellip;"
     });
     saving.show();
@@ -833,3 +827,5 @@ function saveSetSectionScheduleDate(e) {
         saving.hide();
     });
 }
+
+}); // end require()
