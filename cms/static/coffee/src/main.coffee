@@ -1,13 +1,10 @@
 require ["jquery", "underscore.string", "backbone", "coffee/src/ajax_prefix", "js/views/feedback_notification", "jquery.cookie"],
 ($, str, Backbone, AjaxPrefix, NotificationView) ->
-  AjaxPrefix.addAjaxPrefix(jQuery, -> CMS.prefix)
+  AjaxPrefix.addAjaxPrefix jQuery, ->
+    $("meta[name='path_prefix']").attr('content')
 
   window.CMS = window.CMS or {}
-  CMS.Models = CMS.Models or {}
-  CMS.Views = CMS.Views or {}
-  CMS.Collections = CMS.Collections or {}
   CMS.URL = CMS.URL or {}
-  CMS.prefix = CMS.prefix or $("meta[name='path_prefix']").attr('content')
 
   _.extend CMS, Backbone.Events
 
@@ -34,7 +31,5 @@ require ["jquery", "underscore.string", "backbone", "coffee/src/ajax_prefix", "j
       )
       msg.show()
 
-    window.onTouchBasedDevice = ->
-      navigator.userAgent.match /iPhone|iPod|iPad/i
-
-    $('body').addClass 'touch-based-device' if onTouchBasedDevice()
+    if navigator.userAgent.match /iPhone|iPod|iPad/i
+      $('body').addClass 'touch-based-device'
