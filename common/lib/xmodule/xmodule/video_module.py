@@ -15,6 +15,8 @@ import logging
 
 from lxml import etree
 from pkg_resources import resource_string
+import datetime
+import time
 
 from django.http import Http404
 from django.conf import settings
@@ -29,11 +31,6 @@ from xmodule.modulestore.django import modulestore
 from xmodule.contentstore.content import StaticContent
 from xblock.core import Scope, String, Boolean, Float, List, Integer
 
-# TODO: Don't do this - cpennington
-from xblock.test.test_core import DictModel
-
-import datetime
-import time
 from xmodule.modulestore.inheritance import InheritanceKeyValueStore
 from xblock.runtime import DbModel
 
@@ -250,7 +247,7 @@ class VideoDescriptor(VideoFields, TabsEditingDescriptor, EmptyDataRawDescriptor
         model_data = DbModel(kvs, cls, None, XmlUsage(course_id, location))
         video = cls(
             system,
-            DictModel(model_data),
+            model_data,
         )
         return video
 
