@@ -3,7 +3,7 @@ This is the testing suite for the models within the search module
 """
 
 from django.test import TestCase
-from search.models import _snippet_generator, SearchResults
+from search.models import _snippet_generator, _get_content_url, SearchResults
 from test_mongo import dummy_document
 from pyfuzz.generator import random_regex
 
@@ -47,9 +47,9 @@ class ModelTest(TestCase):
     """
 
     def test_snippet_generation(self):
-        snippets = _snippet_generator(TEST_TEXT, "quis nostrud", bold=False)
+        snippets = _snippet_generator(TEST_TEXT, "quis nostrud")
         self.assertTrue(snippets.startswith("Ut enim ad minim"))
-        self.assertTrue(snippets.endswith("anim id est laborum"))
+        self.assertTrue(snippets.strip().endswith("anim id est laborum"))
 
     def test_highlighting(self):
         highlights = _snippet_generator(TEST_TEXT, "quis nostrud")
@@ -63,6 +63,12 @@ class ModelTest(TestCase):
         hits = [dummy_entry(score) for score in scores]
         full_return = FakeResponse({"hits": {"hits": hits}})
         results = SearchResults(full_return, s="fake query", sort="relevance")
-        results.sort_results()
         scores = [entry.score for entry in results.entries]
         self.assertEqual([123.2, 5.2, 2.0, 1.0], scores)
+
+    def test_get_content_url(self):
+        id = json.dumps({"org": "test-org", "course": "test-course"})
+        document = {"id": id}
+        static_url = "/static/images/test/image/url.jpg"
+        expected_content_url = "/c4x/test-org/test-course/asset/images_test_image_url.jpg"
+        self.assertEqual(expected_content_url, _get_content_url(document, static_url))

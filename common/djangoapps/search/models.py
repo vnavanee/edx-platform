@@ -4,13 +4,12 @@ Models for representation of search results
 
 import json
 import string
-import logging
+
+import nltk
+from nltk.stem.porter import PorterStemmer
 
 import search.sorting
 from xmodule.modulestore import Location
-
-import nltk
-log = logging.getLogger("edx.search")
 
 
 class SearchResults:
@@ -24,23 +23,14 @@ class SearchResults:
     def __init__(self, response, **kwargs):
         """kwargs should be the GET parameters from the original search request
         filters needs to be a dictionary that maps fields to allowed values"""
-        raw_results = json.loads(response.content).get("hits", {"hits": ""})["hits"]
-        scores = [entry["_score"] for entry in raw_results]
-        self.sort = kwargs.get("sort", "relevance")
-        raw_data = [entry["_source"] for entry in raw_results]
-        self.query = " ".join(kwargs.get("s", "*.*"))
-        results = zip(raw_data, scores)
-        self.entries = [SearchResult(entry, score, self.query) for entry, score in results]
-        self.filters = kwargs.get("filters", {"": ""})
-
-    def sort_results(self):
-        """
-        Applies an in-place sort of the entries associated with the search results
-
-        Sort type is specified in object initialization
-        """
-
-        self.entries = search.sorting.sort(self.entries, self.sort)
+        raw_results = json.loads(response.content).get("hits", {"hits": []})["hits"]
+        self.query = " ".join(kwargs.get("s", ""))
+        if not self.query:
+            self.entries = []
+        else:
+            entries = [SearchResult(entry, self.query) for entry in raw_results]
+            sort = kwargs.get("sort", "relevance")
+            self.entries = search.sorting.sort(entries, sort)
 
     def get_category(self, category="all"):
         """
@@ -60,16 +50,16 @@ class SearchResult:
     A single element from the Search Results collection
     """
 
-    def __init__(self, entry, score, query):
+    def __init__(self, entry, query):
         self.data = entry
-        self.category = json.loads(entry["id"])["category"]
+        self.category = json.loads(entry["_source"]["id"])["category"]
         self.url = _return_jump_to_url(entry)
-        self.score = score
-        if entry["thumbnail"].startswith("/static/"):
-            self.thumbnail = _get_content_url(self.data, entry["thumbnail"])
+        self.score = entry["_score"]
+        if entry["_source"]["thumbnail"].startswith("/static/"):
+            self.thumbnail = _get_content_url(self.data, entry["_source"]["thumbnail"])
         else:
-            self.thumbnail = entry["thumbnail"]
-        self.snippets = _snippet_generator(self.data["searchable_text"], query)
+            self.thumbnail = entry["_source"]["thumbnail"]
+        self.snippets = _snippet_generator(self.data["_source"]["searchable_text"], query)
 
 
 def _get_content_url(data, static_url):
@@ -88,7 +78,7 @@ def _get_content_url(data, static_url):
     return substring
 
 
-def _snippet_generator(transcript, query, soft_max=50, word_margin=25, bold=True):
+def _snippet_generator(transcript, query, soft_max=50, word_margin=25):
     """
     This returns a relevant snippet from a given search item with direct matches highlighted.
 
@@ -110,69 +100,46 @@ def _snippet_generator(transcript, query, soft_max=50, word_margin=25, bold=True
     """
 
     punkt = nltk.data.load('tokenizers/punkt/english.pickle')
+    stemmer = PorterStemmer()
     sentences = punkt.tokenize(transcript)
-    substrings = [word.lower() for word in query.split()]
-    query_container = lambda sentence: any(substring in sentence.lower() for substring in substrings)
-    tripped = False
+    query_set = set([_clean(word) for word in query.split()])
+    sentence_stem_set = lambda sentence: set([_clean(word) for word in sentence.split()])
+    stem_match = lambda sentence: bool(query_set.intersection(sentence_stem_set(sentence)))
+    snippet_start = next((i for i,sentence in enumerate(sentences) if stem_match(sentence)), 0)
     response = ""
-    for sentence in sentences:
-        if not tripped:
-            if query_container(sentence):
-                tripped = True
-                response += sentence
+    for sentence in sentences[snippet_start:]:
+        if (len(response.split()) + len(sentence.split()) < soft_max):
+            response += " " + sentence
         else:
-            if (len(response.split()) + len(sentence.split()) < soft_max):
-                response += " " + sentence
-            else:
-                response += " " + " ".join(sentence.split()[:word_margin])
-                break
-    # If this is a phonetic match, there might not be a direct text match
-    if tripped is False:
-        for sentence in sentences:
-            if (len(response.split()) + len(sentence.split())) < soft_max:
-                response += " " + sentence
-            else:
-                response += " " + " ".join(sentence.split()[:word_margin])
-                break
-    if bold:
-        response = _match_highlighter(query, response)
+            response += " " + " ".join(sentence.split()[:word_margin])
+            break
+    response = _highlight_matches(query, response)
     return response
 
 
-def _match(words):
+def _clean(term):
     """
-    Determines whether two words are close enough to each other to be called a "match"
+    Returns a standardizes or "cleaned" version of the term
 
-    The check is whether one of the words contains each other and if their lengths are within
-    a relatively small tolerance of each other.
+    Specifically casts to lowercase, removes punctuation, and stems.
     """
 
-    contained = lambda words: (words[0] in words[1]) or (words[1] in words[0])
-    near_size = lambda words: abs(len(words[0]) - len(words[1])) < (len(words[0]) + len(words[1])) / 6
-    return contained(words) and near_size(words)
+    stemmer = PorterStemmer()
+    if isinstance(term, unicode):
+        punctuation_map = {ord(char): None for char in string.punctuation}
+        rinsed_term = term.translate(punctuation_map)
+    else:
+        rinsed_term = term.translate(None, string.punctuation)
+    return stemmer.stem(rinsed_term.lower())
 
-
-def _match_highlighter(query, response, tag="b", css_class="highlight"):
+def _highlight_matches(query, response):
     """
     Highlights all direct matches within given snippet
     """
 
-    wrapping = ("<" + tag + " class=" + css_class + ">", "</" + tag + ">")
-    if isinstance(response, unicode):
-        punctuation_map = {ord(char): None for char in string.punctuation}
-        depunctuation = lambda word: word.translate(punctuation_map)
-    else:
-        depunctuation = lambda word: word.translate(None, string.punctuation)
-    wrap = lambda text: wrapping[0] + text + wrapping[1]
-    query_set = set(word.lower() for word in query.split())
-    bold_response = ""
-    for word in response.split():
-        if any(_match((query_word, depunctuation(word.lower()))) for query_word in query_set):
-            bold_response += wrap(word) + " "
-        else:
-            bold_response += word + " "
-    return bold_response
-
+    query_set = set([_clean(word) for word in query.split()])
+    wrap = lambda word: "<b class=highlight>%s</b> " % word
+    return " ".join([wrap(word) if _clean(word) in query_set else word for word in response.split()])
 
 def _return_jump_to_url(entry):
     """
@@ -180,6 +147,6 @@ def _return_jump_to_url(entry):
     """
 
     fields = ["tag", "org", "course", "category", "name"]
-    location = Location(*[json.loads(entry["id"])[field] for field in fields])
-    url = '{0}/{1}/jump_to/{2}'.format('/courses', entry["course_id"], location)
+    location = Location(*[json.loads(entry["_source"]["id"])[field] for field in fields])
+    url = '/courses/{0}/jump_to/{1}'.format(entry["_source"]["course_id"], location)
     return url

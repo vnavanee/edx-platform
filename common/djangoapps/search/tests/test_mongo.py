@@ -3,14 +3,16 @@ Test suite for the MongoIndexer class in es_requests
 """
 
 from StringIO import StringIO
-
 import json
+
 from django.test import TestCase
+from django.test.utils import override_settings
+
 from pymongo import MongoClient
-from pyfuzz.generator import random_item, random_ascii, random_regex
+from pyfuzz.generator import random_item, random_ascii
 import ho.pisa as pisa
 
-from search.es_requests import MongoIndexer, EmptyFieldException
+from search.es_requests import MongoIndexer, NoSearchableTextException
 
 
 def dummy_document(key, values, data_type, **kwargs):
@@ -30,10 +32,10 @@ class MongoTest(TestCase):
     Test suite for the MongoIndexer class
     """
 
+    @override_settings(CONTENTSTORE={'OPTIONS': {'db': 'test-content'}})
+    @override_settings(MODULESTORE={'default': {'OPTIONS': {'db': 'test-module', 'host': 'localhost'}}})
     def setUp(self):
-        self.host = "localhost"
-        self.port = 27017
-        self.client = MongoClient(self.host, self.port)
+        self.client = MongoClient('localhost', 27017)
         # Create test databases
         dummy = {"dummy": True}
         self.test_content = self.client["test-content"]
@@ -45,7 +47,7 @@ class MongoTest(TestCase):
         self.file_collection.insert(dummy)
         self.module_collection = self.test_module["modulestore"]
         self.module_collection.insert(dummy)
-        self.indexer = MongoIndexer(self.host, self.port, content_database="test-content", module_database="test-module")
+        self.indexer = MongoIndexer()
 
     def test_find_module_for_course(self):
         id_ = dummy_document("_id", ["tag", "org", "course", "category", "name"], "ascii", length=20)
@@ -67,7 +69,7 @@ class MongoTest(TestCase):
         success = False
         try:
             self.indexer._find_transcript_for_video_module(test_bad_transcript), [""]
-        except EmptyFieldException:
+        except NoSearchableTextException:
             success = True
         self.assertTrue(success)
 
@@ -141,7 +143,7 @@ class MongoTest(TestCase):
         self.assertEquals(action["index"]["_type"], "test type hash")
 
     def test_index_course_problem(self):
-        document = dummy_document("_id", ["org"], "regex", regex="[a-zA-Z0-9]", length=50)
+        document = dummy_document("_id", ["org", "name"], "regex", regex="[a-zA-Z0-9]", length=50)
         document["_id"].update({"category": "problem", "course": "test-course"})
         asset_string = "<p>Test</p>"
         document.update({"definition": {"data": asset_string}})

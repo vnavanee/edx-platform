@@ -23,7 +23,6 @@ class EsTest(TestCase):
         self.assertEqual(database_request.status_code, 200)
         self.elastic_search = ElasticDatabase("common/djangoapps/search/tests/test_settings.json")
         index_request = setup_index(self.elastic_search.url, "test-index", self.elastic_search.index_settings)
-        print index_request.content
         self.assertEqual(index_request.status_code, 200)
         type_request = setup_type(
             self.elastic_search.url,

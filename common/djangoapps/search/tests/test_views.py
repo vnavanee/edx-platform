@@ -2,12 +2,15 @@
 Basic test for views in search
 """
 
-import search.views as views
-from django.test import TestCase
 import threading
-from BaseHTTPServer import HTTPServer, BaseHTTPRequestHandler
 from collections import namedtuple
+from BaseHTTPServer import HTTPServer, BaseHTTPRequestHandler
+
+from django.test import TestCase
+from django.test.utils import override_settings
 import requests
+
+import search.views as views
 from search.models import SearchResults
 
 
@@ -117,15 +120,15 @@ class ViewTest(TestCase):
 
     def setUp(self):
         self.stub = StubServer()
-        self.url = "http://127.0.0.1:9201"
 
     def test_stub_server(self):
         check = requests.get("http://127.0.0.1:9201")
         self.assertEqual(check.status_code, 200)
 
+    @override_settings(ES_DATABASE="http://127.0.0.1:9201")
     def test_basic_view(self):
         fake_request = namedtuple("Request", "GET")
-        response = views._find(fake_request({}), "org/test-course/run", 1, self.url)
+        response = views._find(fake_request({}), "org/test-course/run", 1)
         self.assertFalse(response["results"])
         self.assertEqual(response["old_query"], "*.*")
         self.assertTrue(isinstance(response['data'], SearchResults))

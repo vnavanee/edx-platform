@@ -31,5 +31,5 @@ def alphabetical_sort(data_list):
     Sorts items in data_list alphabetically by display_name in the data field of each object
     """
 
-    sorting = lambda entry: " ".join(entry.data.get("display_name", "")).lower()
+    sorting = lambda entry: entry.data.get("display_name", "").lower()
     return sorted(data_list, key=sorting)

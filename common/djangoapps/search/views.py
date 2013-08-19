@@ -18,7 +18,7 @@ from search.es_requests import MongoIndexer
 
 
 CONTENT_TYPES = ("transcript", "problem")
-log = logging.getLogger("edx.search")
+log = logging.getLogger(__name__)
 
 
 @ensure_csrf_cookie
@@ -27,12 +27,14 @@ def search(request, course_id):
     Returns search results within course_id from request.
 
     Request should contain the query string in the "s" parameter.
+
+    If user doesn't have access to the course, get_course_with_access automatically 404s
     """
 
     page = int(request.GET.get("page", 1))
-    filter = request.GET.get("filter", "all")
+    current_filter = request.GET.get("filter", "all")
     course = get_course_with_access(request.user, course_id, 'load')
-    context = _find(request, course_id, page, filter)
+    context = _find(request, course_id, page, current_filter)
     context.update({"course": course})
     return render_to_response("search_templates/results.html", context)
 
@@ -54,12 +56,12 @@ def index_course(request):
         return HttpResponseBadRequest()
 
 
-def _find(request, course_id, page=1, filter="all", test_url=None):
+def _find(request, course_id, page=1, current_filter="all"):
     """
     Method in charge of getting search results and associated metadata
     """
 
-    database = test_url or settings.ES_DATABASE
+    database = settings.ES_DATABASE
     full_query_data = {}
     query = request.GET.get("s", "*.*")
     full_query_data.update(
@@ -83,18 +85,16 @@ def _find(request, course_id, page=1, filter="all", test_url=None):
     course_hash = hashlib.sha1(course_id).hexdigest()
     base_url = "/".join([database, index, course_hash])
     base_url += "/_search"
-    context = {}
     response = requests.get(base_url, data=json.dumps(full_query_data))
     results = SearchResults(response, **request.GET)
-    results.sort_results()
     course = course_id.split("/")[1]
-    context.update({"results": len(results.entries) > 0})
-    context.update({
+    context = {
+        "results": len(results.entries) > 0,
         "result_start": (page - 1) * 10,
         "result_end": page * 10,
-        "filter": filter,
+        "filter": current_filter,
         "data": results,
         "old_query": query,
         "course_id": course
-    })
+    }
     return context

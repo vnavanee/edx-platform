@@ -114,32 +114,28 @@ class MongoIndexer:
     This class is the connection point between Mongo and ElasticSearch.
     """
 
-    def __init__(
-        self, host, port, content_database='xcontent', module_database='xmodule',
-        edge_content_database='edge-xcontent', edge_module_database='edge-xmodule',
-        es_instance=ElasticDatabase()
-    ):
-        self.host = host
-        self.port = port
+    def __init__(self, es_instance=ElasticDatabase()):
+        host = settings.MODULESTORE['default']['OPTIONS']['host']
+        port = 27017
         client = MongoClient(host, port)
-        content_db = client[content_database]
-        module_db = client[module_database]
-        edge_content_db = client[edge_content_database]
-        edge_module_db = client[edge_module_database]
-        self._chunk_collection = content_db["fs.chunks"]
-        self._module_collection = module_db["modulestore"]
-        self._edge_chunk_collection = edge_content_db["fs.chunks"]
-        self._edge_module_collection = edge_module_db["modulestore"]
+        content_db = settings.CONTENTSTORE["OPTIONS"]['db']
+        module_db = settings.MODULESTORE['default']['OPTIONS']['db']
+        self._chunk_collection = client[content_db]["fs.chunks"]
+        self._module_collection = client[module_db]["modulestore"]
         self._es_instance = es_instance
 
     def _get_bulk_index_item(self, index, data):
         """
         Returns a string representing the next indexing action for bulk index
+
+        Format example is in the doc string for bulk_index. Reposted here for clarity:
+        Example:
+        {"index": {"_index": "transcript-index", "_type": "course_hash", "_id": "id_hash"}}
+        {"field1": "value1"...}
         """
 
         return_string = ""
         return_string += json.dumps({"index": {"_index": index, "_type": data["type_hash"], "_id": data["hash"]}})
-        log.debug(return_string)
         return_string += "\n"
         return_string += json.dumps(data)
         return_string += "\n"
@@ -210,11 +206,11 @@ class MongoIndexer:
 
         Otherwise there will be no thumbnail for the problem
         """
-        img_src_pattern = r"(<img)(.*?)(src=\")([^\s]+?)\"\s?(.*?)(/?>)"
+
+        img_src_pattern = r"<img[^>]+src=\"([^\"]+)\""
         first_image = re.search(img_src_pattern, html, re.DOTALL)
         if first_image is not None:
-            tag = first_image.group()
-            return re.sub(img_src_pattern, r"\4", tag, re.DOTALL)
+            return first_image.group(1)
         else:
             return ""
 
@@ -227,7 +223,7 @@ class MongoIndexer:
 
         data = mongo_element["definition"]["data"]
         # Grabs all text in paragraph tags. Explanation is a header that appears a lot, so it's thrown out.
-        paragraphs = " ".join([text for text in re.findall(r"<p>(.*?)</p>", data) if text is not "Explanation"])
+        paragraphs = " ".join([text for text in re.findall(r"<p>(.*?)</p>", data)])
         paragraphs += " "
         # Grabs all text between text tags, which is the most common container after paragraph tags.
         paragraphs += " ".join([text for text in re.findall(r"<text>(.*?)</text>", data)])
@@ -235,13 +231,10 @@ class MongoIndexer:
         cleaned_text = re.sub(r"\\(.*?\\)", "", paragraphs).replace("\\", "")
         # Removes all lingering tags
         remove_tags = re.sub(r"<[a-zA-Z0-9/\.\= \"\'_-]+>", "", cleaned_text)
-        # Problems sometimes include large swaths of repeated text, this regex will just remove
-        # long strings of identical repeated text
-        remove_repetitions = re.sub(r"(.)\1{10,}", "", remove_tags)
-        if remove_repetitions is None:
+        if not remove_tags:
             raise NoSearchableTextException
         else:
-            return remove_repetitions
+            return remove_tags
 
     def _find_transcript_for_video_module(self, video_module):
         """
@@ -260,8 +253,10 @@ class MongoIndexer:
             raise NoSearchableTextException
         else:
             name_pattern = re.compile(".*" + uuid + ".*")
-        chunk = (self._chunk_collection.find_one({"files_id.name": name_pattern}) or
-            self._edge_chunk_collection.find_one({"files_id.name": name_pattern}))
+        chunk = (
+            self._chunk_collection.find_one({"files_id.name": name_pattern}) or
+            self._edge_chunk_collection.find_one({"files_id.name": name_pattern})
+        )
         if chunk is None:
             raise NoSearchableTextException
         else:
@@ -342,9 +337,9 @@ class MongoIndexer:
         Returns a cursor matching all modules in the given course
         """
 
-        main_cursor = self._module_collection.find({"_id.course": course}, timeout=False)
-        edge_cursor = self._edge_module_collection.find({"_id.course": course}, timeout=False)
-        return (entry for entry in chain(main_cursor, edge_cursor))
+        cursor = self._module_collection.find({"_id.course": course}, timeout=False)
+        # Pymongo's cursors are a little finnicky, so this is just explicitly casting it to a standard generator
+        return (entry for entry in chain(cursor))
 
     def index_course(self, course, chunk_size=10):
         """
@@ -354,6 +349,7 @@ class MongoIndexer:
         cursor = self._find_modules_for_course(course)
         counter = 0
         index_string = ""
+        error_string = ""
         for item in cursor:
             counter += 1
             category = item["_id"]["category"].lower().strip()
@@ -371,8 +367,10 @@ class MongoIndexer:
             except NoSearchableTextException:
                 continue
             index_string += self._get_bulk_index_item(index, data)
-            if counter % chunk_size and counter > 1:
+            error_string += item["_id"]["name"] + "\n"
+            if counter % chunk_size == 0 and counter > 1:
                 index_status_code = self._es_instance.bulk_index(index_string).status_code
                 if index_status_code == 400:
-                    log.error("The following bulk index failed: %s" % index_string)
+                    log.error("The following bulk index failed: %s" % error_string)
                 index_string = ""
+                error_string = ""
