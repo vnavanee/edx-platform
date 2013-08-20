@@ -148,9 +148,6 @@ class MongoIndexer:
         course_element = self._module_collection.find_one({
             "_id.course": mongo_module["_id"]["course"],
             "_id.category": "course"
-        }) or self._edge_module_collection.find_one({
-            "_id.course": mongo_module["_id"]["course"],
-            "_id.category": "course"
         })
         return course_element["_id"]["name"]
 
@@ -254,8 +251,7 @@ class MongoIndexer:
         else:
             name_pattern = re.compile(".*" + uuid + ".*")
         chunk = (
-            self._chunk_collection.find_one({"files_id.name": name_pattern}) or
-            self._edge_chunk_collection.find_one({"files_id.name": name_pattern})
+            self._chunk_collection.find_one({"files_id.name": name_pattern})
         )
         if chunk is None:
             raise NoSearchableTextException

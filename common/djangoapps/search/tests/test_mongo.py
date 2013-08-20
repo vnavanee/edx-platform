@@ -10,7 +10,6 @@ from django.test.utils import override_settings
 
 from pymongo import MongoClient
 from pyfuzz.generator import random_item, random_ascii
-import ho.pisa as pisa
 
 from search.es_requests import MongoIndexer, NoSearchableTextException
 

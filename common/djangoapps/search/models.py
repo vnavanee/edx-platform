@@ -5,6 +5,7 @@ Models for representation of search results
 import json
 import string
 
+from django.conf import settings
 import nltk
 from nltk.stem.porter import PorterStemmer
 
@@ -51,15 +52,15 @@ class SearchResult:
     """
 
     def __init__(self, entry, query):
-        self.data = entry
-        self.category = json.loads(entry["_source"]["id"])["category"]
-        self.url = _return_jump_to_url(entry)
+        self.data = entry["_source"]
+        self.category = json.loads(self.data["id"])["category"]
+        self.url = _return_jump_to_url(self.data)
         self.score = entry["_score"]
-        if entry["_source"]["thumbnail"].startswith("/static/"):
-            self.thumbnail = _get_content_url(self.data, entry["_source"]["thumbnail"])
+        if self.data["thumbnail"].startswith("/static/"):
+            self.thumbnail = _get_content_url(self.data, self.data["thumbnail"])
         else:
-            self.thumbnail = entry["_source"]["thumbnail"]
-        self.snippets = _snippet_generator(self.data["_source"]["searchable_text"], query)
+            self.thumbnail = self.data["thumbnail"]
+        self.snippets = _snippet_generator(self.data["searchable_text"], query)
 
 
 def _get_content_url(data, static_url):
@@ -99,13 +100,12 @@ def _snippet_generator(transcript, query, soft_max=50, word_margin=25):
     result in truncated snippets.
     """
 
-    punkt = nltk.data.load('tokenizers/punkt/english.pickle')
-    stemmer = PorterStemmer()
+    punkt = nltk.data.load(settings.SENTENCE_TOKENIZER)
     sentences = punkt.tokenize(transcript)
     query_set = set([_clean(word) for word in query.split()])
     sentence_stem_set = lambda sentence: set([_clean(word) for word in sentence.split()])
     stem_match = lambda sentence: bool(query_set.intersection(sentence_stem_set(sentence)))
-    snippet_start = next((i for i,sentence in enumerate(sentences) if stem_match(sentence)), 0)
+    snippet_start = next((i for i, sentence in enumerate(sentences) if stem_match(sentence)), 0)
     response = ""
     for sentence in sentences[snippet_start:]:
         if (len(response.split()) + len(sentence.split()) < soft_max):
@@ -132,6 +132,7 @@ def _clean(term):
         rinsed_term = term.translate(None, string.punctuation)
     return stemmer.stem(rinsed_term.lower())
 
+
 def _highlight_matches(query, response):
     """
     Highlights all direct matches within given snippet
@@ -141,12 +142,13 @@ def _highlight_matches(query, response):
     wrap = lambda word: "<b class=highlight>%s</b> " % word
     return " ".join([wrap(word) if _clean(word) in query_set else word for word in response.split()])
 
+
 def _return_jump_to_url(entry):
     """
     Generates the proper jump_to url for a given entry
     """
 
     fields = ["tag", "org", "course", "category", "name"]
-    location = Location(*[json.loads(entry["_source"]["id"])[field] for field in fields])
-    url = '/courses/{0}/jump_to/{1}'.format(entry["_source"]["course_id"], location)
+    location = Location(*[json.loads(entry["id"])[field] for field in fields])
+    url = '/courses/{0}/jump_to/{1}'.format(entry["course_id"], location)
     return url
