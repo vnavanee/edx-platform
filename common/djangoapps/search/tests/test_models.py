@@ -7,7 +7,7 @@ This is the testing suite for the models within the search module
 import json
 from django.test import TestCase
 from django.test.utils import override_settings
-from pyfuzz.generator import random_regex, random_language
+from pyfuzz.generator import random_regex
 
 from search.models import SearchResults, SearchResult
 from test_mongo import dummy_document
@@ -78,6 +78,8 @@ class ModelTest(TestCase):
         hits = [dummy_entry(score) for score in scores]
         full_return = FakeResponse({"hits": {"hits": hits}})
         results = SearchResults(full_return, s="fake query", sort="relevance")
+        self.assertTrue(all([isinstance(result, SearchResult) for result in results.entries]))
+        self.assertEqual("fake query", results.query)
         scores = [entry.score for entry in results.entries]
         self.assertEqual([123.2, 5.2, 2.0, 1.0], scores)
 

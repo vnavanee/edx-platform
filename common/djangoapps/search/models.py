@@ -18,15 +18,16 @@ class SearchResults(object):
     """
     This is a collection of all search results to a query.
 
-    In addition to extending all of the standard collection methods (__len__, __getitem__, etc...)
-    this lets you use custom sorts and filters on the included search results.
+    It will automatically sort itself according to a sort parameter passed in as a kwarg.
+    The sort method should be added to search.sorting. The existing sort methods should be
+    decent for outlining how a sort works.
     """
 
     def __init__(self, response, **kwargs):
         """kwargs should be the GET parameters from the original search request
         filters needs to be a dictionary that maps fields to allowed values"""
         raw_results = json.loads(response.content).get("hits", {"hits": []})["hits"]
-        self.query = " ".join(kwargs.get("s", ""))
+        self.query = kwargs.get("s", "")
         if not self.query:
             self.entries = []
         else:
