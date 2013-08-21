@@ -39,7 +39,7 @@ class NoSearchableTextException(Exception):
     pass
 
 
-class ElasticDatabase:
+class ElasticDatabase(object):
     """
     A wrapper for Elastic Search that sits on top of the existent REST api.
 
@@ -109,7 +109,7 @@ class ElasticDatabase:
         return flaky_request("post", url, data=all_data)
 
 
-class MongoIndexer:
+class MongoIndexer(object):
     """
     This class is the connection point between Mongo and ElasticSearch.
     """

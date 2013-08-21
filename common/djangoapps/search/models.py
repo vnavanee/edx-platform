@@ -8,12 +8,13 @@ import string
 from django.conf import settings
 import nltk
 from nltk.stem.porter import PorterStemmer
+from guess_language import guessLanguageName
 
 import search.sorting
 from xmodule.modulestore import Location
 
 
-class SearchResults:
+class SearchResults(object):
     """
     This is a collection of all search results to a query.
 
@@ -46,7 +47,7 @@ class SearchResults:
             return [entry for entry in self.entries if entry.category == category]
 
 
-class SearchResult:
+class SearchResult(object):
     """
     A single element from the Search Results collection
     """
@@ -98,13 +99,28 @@ def _snippet_generator(transcript, query, soft_max=50, word_margin=25):
 
     The word margin is the maximum number of words past the soft max we allow the snippet to go. This might
     result in truncated snippets.
+
+    For sentence tokenization, we allow a setting, if it is set then we will just use that tokenizer.
+    Otherwise we will try to guess the language of the transcript and use the appropriate punkt tokenizer.
+    If that fails, or we don't have an appropriate tokenizer we will just assume that periods are appropriate
+    sentence delimiters, and if they are things work without condition. Otherwise this tokenizer will just
+    start from the beginning of the transcript.
     """
 
-    punkt = nltk.data.load(settings.SENTENCE_TOKENIZER)
-    sentences = punkt.tokenize(transcript)
+    if settings.SENTENCE_TOKENIZER and settings.SENTENCE_TOKENIZER.lower() != "detect":
+        punkt = nltk.data.load(settings.SENTENCE_TOKENIZER)
+        sentences = punkt.tokenize(transcript)
+    else:
+        language = guessLanguageName(transcript).lower()
+        try:
+            punkt = nltk.data.load('tokenizers/punkt/%s.pickle' % language)
+            sentences = punkt.tokenize(transcript)
+        except LookupError:
+            sentences = transcript.split(".")
+
     query_set = set([_clean(word) for word in query.split()])
-    sentence_stem_set = lambda sentence: set([_clean(word) for word in sentence.split()])
-    stem_match = lambda sentence: bool(query_set.intersection(sentence_stem_set(sentence)))
+    get_sentence_stem_set = lambda sentence: set([_clean(word) for word in sentence.split()])
+    stem_match = lambda sentence: bool(query_set.intersection(get_sentence_stem_set(sentence)))
     snippet_start = next((i for i, sentence in enumerate(sentences) if stem_match(sentence)), 0)
     response = ""
     for sentence in sentences[snippet_start:]:
@@ -119,7 +135,7 @@ def _snippet_generator(transcript, query, soft_max=50, word_margin=25):
 
 def _clean(term):
     """
-    Returns a standardizes or "cleaned" version of the term
+    Returns a standardized or "cleaned" version of the term
 
     Specifically casts to lowercase, removes punctuation, and stems.
     """
@@ -139,7 +155,7 @@ def _highlight_matches(query, response):
     """
 
     query_set = set([_clean(word) for word in query.split()])
-    wrap = lambda word: "<b class=highlight>%s</b> " % word
+    wrap = lambda word: '<b class="highlight">%s</b> ' % word
     return " ".join([wrap(word) if _clean(word) in query_set else word for word in response.split()])
 
 

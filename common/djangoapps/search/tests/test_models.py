@@ -58,8 +58,8 @@ class ModelTest(TestCase):
         highlights = _snippet_generator(TEST_TEXT, "quis nostrud")
         self.assertTrue(highlights.startswith("Ut enim ad minim"))
         self.assertTrue(highlights.strip().endswith("anim id est laborum"))
-        self.assertTrue("<b class=highlight>quis</b>" in highlights)
-        self.assertTrue("<b class=highlight>nostrud</b>" in highlights)
+        self.assertTrue('<b class="highlight">quis</b>' in highlights)
+        self.assertTrue('<b class="highlight">nostrud</b>' in highlights)
 
     @override_settings(SENTENCE_TOKENIZER="tokenizers/punkt/english.pickle")
     def test_search_result(self):
