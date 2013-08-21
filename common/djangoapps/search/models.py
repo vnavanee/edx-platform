@@ -73,10 +73,9 @@ def _get_content_url(data, static_url):
 
     base_url = "/c4x/%s/%s/asset" % (json.loads(data["id"])["org"], json.loads(data["id"])["course"])
     addendum = static_url.replace("/static/", "")
-    addendum.replace("/", "_")
     current = "/".join([base_url, addendum])
     substring = current[current.find("images/"):].replace("/", "_")
-    substring = current[:current.find("images/")] + substring
+    substring = current[:current.find("/images")] + "/" + substring
     return substring
 
 

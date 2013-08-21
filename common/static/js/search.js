@@ -132,6 +132,13 @@ function moveFilterClasses(){
 }
 
 function changeFilter(){
+    /**
+    * Changes the filter get parameter in the URL and does a redirect
+    *
+    * This is hacky and I don't like it, but I don't know how to change it
+    * Basically this is doing a regex change of the GET param found in the URL.
+    */
+
     var newFilter = $(this).attr("id");
     var newUrl = "";
     if (document.location.href.match(/filter=\w+/)){

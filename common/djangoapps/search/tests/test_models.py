@@ -9,7 +9,7 @@ from django.test import TestCase
 from django.test.utils import override_settings
 from pyfuzz.generator import random_regex, random_language
 
-from search.models import _snippet_generator, _get_content_url, SearchResults
+from search.models import SearchResults, SearchResult
 from test_mongo import dummy_document
 
 TEST_TEXT = "Lorem ipsum dolor sit amet, consectetur adipisicing elit, \
@@ -27,13 +27,17 @@ TEST_GREEK = u"Σο οι δεύτερον απόσταση απαγωγής ολ
              προτιμούν σύγχρονες τη κι να κινήματος. Φίλτρο στήθος πει ατο κεί τέλους. \
              Χωρική θέσεις δε χτένας ίμερας έρευνα έμμεση αρ. Προκύψει επίλογοι ιππασίας σαν."
 
-def dummy_entry(score):
+def dummy_entry(score, searchable_text=None):
     """
     This creates a fully-fledged fake response entry for a given score
     """
 
     id_ = dummy_document("id", ["tag", "org", "course", "category", "name"], "regex", regex="[a-zA-Z0-9]", length=25)
-    source = dummy_document("_source", ["thumbnail", "searchable_text"], "regex", regex="[a-zA-Z0-9]", length=50)
+    if searchable_text is None:
+        source = dummy_document("_source", ["thumbnail", "searchable_text"], "regex", regex="[a-zA-Z0-9]", length=50)
+    else:
+        source = dummy_document("_source", ["thumbnail"], "regex", regex="[a-zA-Z0-9]", length=50)
+        source["_source"].update({"searchable_text": searchable_text})
     string_id = json.dumps(id_["id"])
     source["_source"].update({"id": string_id, "course_id": random_regex(regex="[a-zA-Z0-9/]", length=50)})
     document = {"_score": score}
@@ -41,7 +45,7 @@ def dummy_entry(score):
     return source
 
 
-class FakeResponse():
+class FakeResponse(object):
     """
     Fake minimal response, just wrapping a given dictionary in a response-like object
     """
@@ -49,32 +53,26 @@ class FakeResponse():
     def __init__(self, dictionary):
         self.content = json.dumps(dictionary)
 
-
+@override_settings(SENTENCE_TOKENIZER="tokenizers/punkt/english.pickle")
 class ModelTest(TestCase):
     """
     Tests SearchResults and SearchResult models as well as associated helper functions
     """
 
-    @override_settings(SENTENCE_TOKENIZER="tokenizers/punkt/english.pickle")
     def test_snippet_generation(self):
-        snippets = _snippet_generator(TEST_TEXT, "quis nostrud")
-        self.assertTrue(snippets.startswith("Ut enim ad minim"))
-        self.assertTrue(snippets.strip().endswith("anim id est laborum."))
+        document = dummy_entry(1.0, TEST_TEXT)
+        result = SearchResult(document, "quis nostrud") 
+        self.assertTrue(result.snippets.startswith("Ut enim ad minim"))
+        self.assertTrue(result.snippets.strip().endswith("anim id est laborum."))
+        self.assertTrue('<b class="highlight">quis</b>' in result.snippets)
+        self.assertTrue('<b class="highlight">nostrud</b>' in result.snippets)
 
     @override_settings(SENTENCE_TOKENIZER="DETECT")
     def test_language_detection(self):
-        snippets = _snippet_generator(TEST_GREEK, u"νου στην όπου")
-        self.assertTrue(snippets.startswith(u"Είχε γιου"))
-
-    @override_settings(SENTENCE_TOKENIZER="tokenizers/punkt/english.pickle")
-    def test_highlighting(self):
-        highlights = _snippet_generator(TEST_TEXT, "quis nostrud")
-        self.assertTrue(highlights.startswith("Ut enim ad minim"))
-        self.assertTrue(highlights.strip().endswith("anim id est laborum."))
-        self.assertTrue('<b class="highlight">quis</b>' in highlights)
-        self.assertTrue('<b class="highlight">nostrud</b>' in highlights)
-
-    @override_settings(SENTENCE_TOKENIZER="tokenizers/punkt/english.pickle")
+        document = dummy_entry(1.0, TEST_GREEK)
+        result = SearchResult(document, u"νου στην όπου")
+        self.assertTrue(result.snippets.startswith(u"Είχε γιου"))
+        
     def test_search_result(self):
         scores = [1.0, 5.2, 2.0, 123.2]
         hits = [dummy_entry(score) for score in scores]
@@ -84,8 +82,16 @@ class ModelTest(TestCase):
         self.assertEqual([123.2, 5.2, 2.0, 1.0], scores)
 
     def test_get_content_url(self):
-        id_ = json.dumps({"org": "test-org", "course": "test-course"})
-        document = {"id": id_}
-        static_url = "/static/images/test/image/url.jpg"
+        document = dummy_entry(1.0)
+        id_ = json.dumps({
+            "org": "test-org",
+            "course": "test-course",
+            "category": "fake-category",
+            "tag": "fake-tag",
+            "name": "fake-name"
+        })
+        document["_source"]["id"] = id_
+        document["_source"]['thumbnail'] = "/static/images/test/image/url.jpg"
+        result = SearchResult(document, "fake query")
         expected_content_url = "/c4x/test-org/test-course/asset/images_test_image_url.jpg"
-        self.assertEqual(expected_content_url, _get_content_url(document, static_url))
+        self.assertEqual(expected_content_url, result.thumbnail)
