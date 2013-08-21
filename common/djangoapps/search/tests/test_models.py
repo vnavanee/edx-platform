@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 """
 This is the testing suite for the models within the search module
 """
@@ -5,7 +7,7 @@ This is the testing suite for the models within the search module
 import json
 from django.test import TestCase
 from django.test.utils import override_settings
-from pyfuzz.generator import random_regex
+from pyfuzz.generator import random_regex, random_language
 
 from search.models import _snippet_generator, _get_content_url, SearchResults
 from test_mongo import dummy_document
@@ -16,8 +18,14 @@ TEST_TEXT = "Lorem ipsum dolor sit amet, consectetur adipisicing elit, \
             nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in \
             reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. \
             Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia \
-            deserunt mollit anim id est laborum"
+            deserunt mollit anim id est laborum."
 
+TEST_GREEK = u"Σο οι δεύτερον απόσταση απαγωγής ολόκληρο πω. Είχε γιου βάση όλα \
+             νου στην όπου σούκ. Ανάλυσης νεόφερτο ας εκ νεανικής τεκμήρια νε θα \
+             εξαιτίας δείχνουν. Τη αν ιι έν συμπαίκτης παράδειγμα υποτίθεται τελευταίες. \
+             Μου στίχους σαν γίνεται χιούμορ πως αρχίζει κατ σφυγμός συνθήκη. Αναγνώστη \
+             προτιμούν σύγχρονες τη κι να κινήματος. Φίλτρο στήθος πει ατο κεί τέλους. \
+             Χωρική θέσεις δε χτένας ίμερας έρευνα έμμεση αρ. Προκύψει επίλογοι ιππασίας σαν."
 
 def dummy_entry(score):
     """
@@ -51,13 +59,18 @@ class ModelTest(TestCase):
     def test_snippet_generation(self):
         snippets = _snippet_generator(TEST_TEXT, "quis nostrud")
         self.assertTrue(snippets.startswith("Ut enim ad minim"))
-        self.assertTrue(snippets.strip().endswith("anim id est laborum"))
+        self.assertTrue(snippets.strip().endswith("anim id est laborum."))
+
+    @override_settings(SENTENCE_TOKENIZER="DETECT")
+    def test_language_detection(self):
+        snippets = _snippet_generator(TEST_GREEK, u"νου στην όπου")
+        self.assertTrue(snippets.startswith(u"Είχε γιου"))
 
     @override_settings(SENTENCE_TOKENIZER="tokenizers/punkt/english.pickle")
     def test_highlighting(self):
         highlights = _snippet_generator(TEST_TEXT, "quis nostrud")
         self.assertTrue(highlights.startswith("Ut enim ad minim"))
-        self.assertTrue(highlights.strip().endswith("anim id est laborum"))
+        self.assertTrue(highlights.strip().endswith("anim id est laborum."))
         self.assertTrue('<b class="highlight">quis</b>' in highlights)
         self.assertTrue('<b class="highlight">nostrud</b>' in highlights)
 
