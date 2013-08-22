@@ -9,10 +9,12 @@ from django.conf import settings
 import nltk
 from nltk.stem.porter import PorterStemmer
 from guess_language import guessLanguageName
+import logging
 
 import search.sorting
 from xmodule.modulestore import Location
 
+log = logging.getLogger(__name__)
 
 class SearchResults(object):
     """
@@ -27,7 +29,9 @@ class SearchResults(object):
         """kwargs should be the GET parameters from the original search request
         filters needs to be a dictionary that maps fields to allowed values"""
         raw_results = json.loads(response.content).get("hits", {"hits": []})["hits"]
+        print kwargs
         self.query = kwargs.get("s", "")
+        log.debug(self.query)
         if not self.query:
             self.entries = []
         else:
@@ -62,7 +66,7 @@ class SearchResult(object):
             self.thumbnail = _get_content_url(self.data, self.data["thumbnail"])
         else:
             self.thumbnail = self.data["thumbnail"]
-        self.snippets = _snippet_generator(self.data["searchable_text"], query)
+        self.snippets = _snippet_generator(self.data["searchable_text"], query[0])
 
 
 def _get_content_url(data, static_url):

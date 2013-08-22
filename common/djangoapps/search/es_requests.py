@@ -14,7 +14,7 @@ from requests.exceptions import RequestException
 from django.conf import settings
 from pymongo import MongoClient
 
-log = logging.getLogger("edx.search")
+log = logging.getLogger(__name__)
 MONGO_COURSE_CACHE = {}
 
 

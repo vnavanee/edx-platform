@@ -57,7 +57,6 @@ function replaceWithSearch(){
             $(this).parent().replaceWith(searchWrapper);
             $("#searchbox").css("width", width);
             $("#searchbox").css("height", height);
-            // $('#search-bar').remove()
             if (document.URL.indexOf("search?s=") == -1){
                 document.getElementById("searchbox").focus();
         }

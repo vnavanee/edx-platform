@@ -27,6 +27,7 @@ TEST_GREEK = u"Σο οι δεύτερον απόσταση απαγωγής ολ
              προτιμούν σύγχρονες τη κι να κινήματος. Φίλτρο στήθος πει ατο κεί τέλους. \
              Χωρική θέσεις δε χτένας ίμερας έρευνα έμμεση αρ. Προκύψει επίλογοι ιππασίας σαν."
 
+
 def dummy_entry(score, searchable_text=None):
     """
     This creates a fully-fledged fake response entry for a given score
@@ -53,6 +54,7 @@ class FakeResponse(object):
     def __init__(self, dictionary):
         self.content = json.dumps(dictionary)
 
+
 @override_settings(SENTENCE_TOKENIZER="tokenizers/punkt/english.pickle")
 class ModelTest(TestCase):
     """
@@ -61,7 +63,7 @@ class ModelTest(TestCase):
 
     def test_snippet_generation(self):
         document = dummy_entry(1.0, TEST_TEXT)
-        result = SearchResult(document, "quis nostrud") 
+        result = SearchResult(document, [u"quis nostrud"])
         self.assertTrue(result.snippets.startswith("Ut enim ad minim"))
         self.assertTrue(result.snippets.strip().endswith("anim id est laborum."))
         self.assertTrue('<b class="highlight">quis</b>' in result.snippets)
@@ -70,16 +72,16 @@ class ModelTest(TestCase):
     @override_settings(SENTENCE_TOKENIZER="DETECT")
     def test_language_detection(self):
         document = dummy_entry(1.0, TEST_GREEK)
-        result = SearchResult(document, u"νου στην όπου")
+        result = SearchResult(document, [u"νου στην όπου"])
         self.assertTrue(result.snippets.startswith(u"Είχε γιου"))
-        
+
     def test_search_result(self):
         scores = [1.0, 5.2, 2.0, 123.2]
         hits = [dummy_entry(score) for score in scores]
         full_return = FakeResponse({"hits": {"hits": hits}})
-        results = SearchResults(full_return, s="fake query", sort="relevance")
+        results = SearchResults(full_return, s=["fake query"], sort="relevance")
         self.assertTrue(all([isinstance(result, SearchResult) for result in results.entries]))
-        self.assertEqual("fake query", results.query)
+        self.assertEqual(["fake query"], results.query)
         scores = [entry.score for entry in results.entries]
         self.assertEqual([123.2, 5.2, 2.0, 1.0], scores)
 
