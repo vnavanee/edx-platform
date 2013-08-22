@@ -18,12 +18,13 @@ below:
   }
 
 """
+
 import inspect
 from importlib import import_module
 
 from django.conf import settings
 
-from track.backends.base import BaseBackend
+from track.backends import BaseBackend
 
 
 __all__ = ['send']

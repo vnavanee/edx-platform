@@ -4,7 +4,7 @@ import logging
 
 import pymongo
 
-from track.backends.base import BaseBackend
+from track.backends import BaseBackend
 
 
 log = logging.getLogger('track.backends.mongo')
@@ -14,15 +14,33 @@ class MongoBackend(BaseBackend):
     def __init__(self, **options):
         super(MongoBackend, self).__init__(**options)
 
-        uri = _make_mongodb_uri(options)
+        # Extract connection parameters from options
+
+        host = options.pop('host', 'localhost')
+        port = options.pop('port', 27017)
+
+        user = options.pop('user', '')
+        password = options.pop('password', '')
+
         db_name = options.pop('database', 'track')
         collection_name = options.pop('collection', 'events')
 
         # By default disable write acknoledgements
         write_concern = options.pop('w', 0)
 
-        self.client = pymongo.MongoClient(host=uri, w=write_concern, **options)
-        self.collection = self.client[db_name][collection_name]
+        # Connect to database and get collection
+
+        self.connection = pymongo.connection.MongoClient(
+            host=host,
+            port=port,
+            w=write_concern,
+            tz_aware=True,
+            **options)
+
+        self.collection = self.connection[db_name][collection_name]
+
+        if user or password:
+            self.collection.database.authenticate(user, password)
 
         self._create_indexes()
 
@@ -32,23 +50,3 @@ class MongoBackend(BaseBackend):
 
     def send(self, event):
         self.collection.insert(event)
-
-
-def _make_mongodb_uri(options):
-    """
-    Make a MongoDB URI from options
-
-    Returns the joined URI and removes the used keys from `options`.
-    """
-
-    host = options.pop('host', 'localhost')
-    port = options.pop('port', 27017)
-    user = options.pop('user', '')
-    password = options.pop('password', '')
-
-    uri = 'mongodb://'
-    if user or password:
-        uri += '{user}:{password}@'.format(user=user, password=password)
-    uri += '{host}:{port}'.format(host=host, port=port)
-
-    return uri

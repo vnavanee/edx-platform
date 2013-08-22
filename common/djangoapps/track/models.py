@@ -1,1 +1,1 @@
-from track.backends.django import TrackingLog  # noqa
+from track.backends.django import TrackingLog

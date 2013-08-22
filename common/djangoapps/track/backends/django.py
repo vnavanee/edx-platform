@@ -6,7 +6,7 @@ import dateutil
 
 from django.db import models
 
-from track.backends.base import BaseBackend
+from track.backends import BaseBackend
 
 
 log = logging.getLogger('track.backends.django')

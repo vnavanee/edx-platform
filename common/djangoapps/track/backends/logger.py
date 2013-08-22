@@ -5,7 +5,8 @@ import json
 
 from django.conf import settings
 
-from track.backends.base import BaseBackend
+from track.backends import BaseBackend
+
 
 log = logging.getLogger('track.backends.logger')
 

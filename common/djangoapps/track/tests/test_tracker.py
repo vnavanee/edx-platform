@@ -1,9 +1,10 @@
+# pylint: disable=protected-access
+
 from django.test import TestCase
 from django.test.utils import override_settings
 
 import track.tracker as tracker
-from track.backends.base import BaseBackend
-
+from track.backends import BaseBackend
 
 SIMPLE_SETTINGS = {
     'default': {
@@ -26,6 +27,7 @@ MULTI_SETTINGS = {
 
 class TestTrackerInstantiation(TestCase):
     def setUp(self):
+        # pylint: disable=protected-access
         self.get_backend = tracker._instantiate_backend_from_name
 
     def test_instatiate_backend(self):
@@ -97,5 +99,6 @@ class DummyBackend(BaseBackend):
         self.flag = options.get('flag', False)
         self.count = 0
 
+    # pylint: disable=unused-argument
     def send(self, event):
         self.count += 1
