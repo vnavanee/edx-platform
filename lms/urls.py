@@ -2,6 +2,7 @@ from django.conf import settings
 from django.conf.urls import patterns, include, url
 from ratelimitbackend import admin
 from django.conf.urls.static import static
+import waffle
 
 # Not used, the work is done in the imported module.
 from . import one_time_startup      # pylint: disable=W0611
@@ -210,8 +211,6 @@ if settings.COURSEWARE_ENABLED:
         #Inside the course
         url(r'^courses/(?P<course_id>[^/]+/[^/]+/[^/]+)/$',
             'courseware.views.course_info', name="course_root"),
-        # url(r'^courses/(?P<course_id>[^/]+/[^/]+/[^/]+)/$',
-        #     'courseware.views.index', name="course_root"),
         url(r'^courses/(?P<course_id>[^/]+/[^/]+/[^/]+)/info$',
             'courseware.views.course_info', name="info"),
         url(r'^courses/(?P<course_id>[^/]+/[^/]+/[^/]+)/syllabus$',
