@@ -419,6 +419,12 @@ class @Problem
           .removeClass().addClass("unanswered")
           .find('span').text('Status: unsubmitted')
 
+    textline: (element) ->
+      $(element).find('input').on 'input', ->
+        $p = $(element).find('p.status')
+        $p.text "unanswered"
+        $p.parent().removeClass().addClass "unanswered"
+
   inputtypeSetupMethods:
 
     'text-input-dynamath': (element) =>
