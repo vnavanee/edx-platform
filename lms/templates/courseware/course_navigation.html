@@ -19,14 +19,17 @@ def url_class(is_active):
   <div class="inner-wrapper">
     <ol class="course-tabs">
       % for tab in get_course_tabs(user, course, active_page, request):
+        % if waffle.flag_is_active(request, 'visual_treatment') or waffle.flag_is_active(request, 'tab_merge'):
+          % if tab.name == "Courseware" or tab.name == "Course Content":
+            <li class="prominent">
+          % else:
+            <li>
+          % endif
+        % else:
           <li>
+        % endif
              <a href="${tab.link | h}" class="${url_class(tab.is_active)}">
                  ${tab.name | h}
-                 % if waffle.flag_is_active(request, 'visual_treatment'):
-                   % if tab.name == "Courseware":
-                     <div style="width:100%;height:100%;border:1px solid #808;"></div>
-                   % endif
-                 % endif
                  % if tab.is_active == True:
                    <span class="sr">, current location</span>
                  %endif

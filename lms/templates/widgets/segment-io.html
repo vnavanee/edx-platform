@@ -13,7 +13,7 @@
         group = "Visual Treatment Test";
     }
 
-    // If the 'tab_merge' flag is active, effects of the 'visual_treatment' flag won't manifest
+    // Tab Merge experiment takes prominence - it's a superset of Visual Treatment
     if (waffle.flag_is_active('tab_merge')) {
         group = "Tab Merge Test";
     }
