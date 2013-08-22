@@ -57,7 +57,7 @@ TabImpl = namedtuple('TabImpl', 'validator generator')
 
 
 #####  Generators for various tabs.
-def _courseware(tab, user, course, active_page, request=None):
+def _courseware(tab, user, course, active_page, request):
     link = reverse('courseware', args=[course.id])
     if waffle.flag_is_active(request, 'tab_merge'):
         return [CourseTab('Course Content', link, active_page == "courseware")]
@@ -308,7 +308,11 @@ def get_course_tabs(user, course, active_page, request):
         # via feature flags, and things like 'textbook' which might generate
         # multiple tabs.
         gen = VALID_TAB_TYPES[tab['type']].generator
-        tabs.extend(gen(tab, user, course, active_page))
+
+        if tab['type'] == "courseware":
+            tabs.extend(gen(tab, user, course, active_page, request))
+        else:
+            tabs.extend(gen(tab, user, course, active_page))
 
     # Instructor tab is special--automatically added if user is staff for the course
     if has_access(user, course, 'staff'):
