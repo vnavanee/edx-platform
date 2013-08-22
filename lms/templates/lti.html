@@ -1,20 +1,42 @@
 <div align="center" id="${element_id}" class="${element_class}">
-    <!-- main html -->
-        <iframe name="iframe2" id="iframe2" width="0" height="0" src="" style="border:0px; overflow-x:hidden;"></iframe>
-        <div id="page" style="display:none" >${ lti_html }</div>
 
-        <script type="text/javascript">
+    ## This form will be hidden. Once available on the client, the LTI
+    ## module JavaScript will trigget a "submit" on the form, and the
+    ## result will be rendered to the below iFrame.
+    <form
+        action="https://bc-staging.vitalsource.com/books/1-889325-26-0"
+        name="ltiLaunchForm"
+        id="ltiLaunchForm"
+        method="post"
+        target="ltiLaunchFrame"
+        encType="application/x-www-form-urlencoded"
+    >
 
-          function getWindow(iframe) {
-              return (iframe.contentWindow) ? iframe.contentWindow : (iframe.contentDocument.document) ? iframe.contentDocument.document : iframe.contentDocument;
-          }
+        <input type="hidden" name="user_id" value="292832126"/>
+        <input type="hidden" name="roles" value="Instructor"/>
 
-          getWindow(document.getElementById('iframe2')).document.open();
-              getWindow(document.getElementById('iframe2')).document.write(document.getElementById('page').innerHTML);
-          getWindow(document.getElementById('iframe2')).document.close();
+        <input type="hidden" name="lti_version" value="LTI-1p0"/>
+        <input type="hidden" name="lti_message_type" value="basic-lti-launch-request"/>
 
-          document.getElementById('iframe2').style.height = (getWindow(document.getElementById('iframe2')).document.body.scrollHeight + 20) +"px";
-          document.getElementById('iframe2').style.width = (document.getElementById('iframe2').parentNode.offsetWidth) +"px";
+        <input type="hidden" name="oauth_version" value="1.0"/>
+        <input type="hidden" name="oauth_nonce" value="e9f0ce07eb5f5f423c558deaf5a5e417"/>
+        <input type="hidden" name="oauth_timestamp" value="1377155823"/>
+        <input type="hidden" name="oauth_consumer_key" value="12345"/>
+        <input type="hidden" name="oauth_signature_method" value="HMAC-SHA1"/>
+        <input type="hidden" name="oauth_signature" value="rYmpKj3yErwUN7tUxK+9kOJ9P4w="/>
 
-        </script>
+        <input type="submit" value="Press to Launch" style="display: none;"/>
+
+    </form>
+
+    ## The result of the form submit will be rendered here.
+    <iframe
+        name="ltiLaunchFrame"
+        id="ltiLaunchFrame"
+        width="0"
+        height="0"
+        src=""
+        style="border: 0px; overflow-x: hidden;"
+    ></iframe>
+
 </div>
