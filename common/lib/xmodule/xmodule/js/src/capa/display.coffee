@@ -411,6 +411,14 @@ class @Problem
         $element.find("label").removeClass()
           .find('span').remove()
 
+    'option-input': (element) ->
+      $select = $(element).find('select')
+      id = ($select.attr('id').match /^input_(.*)$/)[1]
+      $select.on 'change', ->
+        $status = $("#status_#{id}")
+          .removeClass().addClass("unanswered")
+          .find('span').text('Status: unsubmitted')
+
   inputtypeSetupMethods:
 
     'text-input-dynamath': (element) =>
