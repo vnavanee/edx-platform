@@ -12,7 +12,7 @@ import waffle
 	    )
     )}</p>
 
-% if waffle.flag_is_active(request, 'ab_testing'):
+% if waffle.flag_is_active(request, 'tab_merge'):
   <%! from courseware.courses import get_course_info_section %>
 
   <section class="container">

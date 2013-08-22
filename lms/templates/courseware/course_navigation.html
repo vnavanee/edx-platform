@@ -18,11 +18,11 @@ def url_class(is_active):
 <nav class="${active_page} course-material">
   <div class="inner-wrapper">
     <ol class="course-tabs">
-      % for tab in get_course_tabs(user, course, active_page):
+      % for tab in get_course_tabs(user, course, active_page, request):
           <li>
              <a href="${tab.link | h}" class="${url_class(tab.is_active)}">
                  ${tab.name | h}
-                 % if waffle.flag_is_active(request, 'ab_testing'):
+                 % if waffle.flag_is_active(request, 'visual_treatment'):
                    % if tab.name == "Courseware":
                      <div style="width:100%;height:100%;border:1px solid #808;"></div>
                    % endif

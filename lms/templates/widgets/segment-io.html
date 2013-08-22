@@ -9,8 +9,13 @@
     var group;
     group = "Control";
     
-    if (waffle.flag_is_active('ab_testing')) {
-        group = "Test";
+    if (waffle.flag_is_active('visual_treatment')) {
+        group = "Visual Treatment Test";
+    }
+
+    // If the 'tab_merge' flag is active, effects of the 'visual_treatment' flag won't manifest
+    if (waffle.flag_is_active('tab_merge')) {
+        group = "Tab Merge Test";
     }
 
     analytics.identify("${ user.id }", {
