@@ -61,9 +61,6 @@ formulaEquationPreview.enable = function () {
         $this.on("input", initializeRequest);
         // Ask for initial preview.
         initializeRequest.call(this);
-
-        // Reset on input.
-        $this.on("input", _.partial(resetInputAnswered, inputData.inputId));
     }
 
     /**
@@ -162,16 +159,6 @@ formulaEquationPreview.enable = function () {
         } else {
             display(response.preview);
         }
-    }
-
-    /**
-     * Find all places where this input type displays its correct-ness
-     * Replace them with its original state--'unanswered'.
-     */
-    function resetInputAnswered(inputId) {
-        var $div = $('#status_' + inputId);
-        $div.removeClass().addClass("unanswered");
-        $div.find('p.status').text("unanswered");
     }
 
     // Invoke the setup method.

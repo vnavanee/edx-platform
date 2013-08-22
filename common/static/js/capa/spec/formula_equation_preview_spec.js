@@ -397,36 +397,6 @@ describe("Formula Equation Preview", function () {
            });
     });
 
-    it('becomes "unanswered" on input', function () {
-        var $divstatus = $('#status_THE_ID');
-        var $pstatus = $divstatus.find('p.status');
-
-        formulaEquationPreview.enable();
-        waitsFor(function () {
-            return Problem.inputAjax.wasCalled;
-        }, "AJAX never called initially", 1000);
-
-        runs(function () {
-            expect($divstatus.hasClass('INITIAL_STATUS')).toBeTruthy();
-            expect($divstatus.hasClass('unanswered')).toBeFalsy();
-            expect($pstatus.text()).toEqual('INITIAL_STATUS');
-
-            Problem.inputAjax.reset();
-            $("#input_THE_ID").val("different").trigger('input');
-        });
-
-        waitsFor(function () {
-            return Problem.inputAjax.wasCalled;
-        }, "AJAX never called on input", 1000);
-
-        runs(function () {
-            // Note that the `.toBeX()` have switched from above.
-            expect($divstatus.hasClass('INITIAL_STATUS')).toBeFalsy();
-            expect($divstatus.hasClass('unanswered')).toBeTruthy();
-            expect($pstatus.text()).toEqual('unanswered');
-        });
-    });
-
     afterEach(function () {
         // Return jQuery
         $.find = this.old$find;

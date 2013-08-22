@@ -373,9 +373,10 @@ class @Problem
     @answers = @inputs.serialize()
 
   bindResetCorrectness: ->
-    # Loop through all capa_inputtypes
+    # Loop through all input types
     # Bind the reset functions at that scope.
-    @el.find(".capa_inputtype").each (index, inputtype) =>
+    $inputtypes = @el.find(".capa_inputtype").add(@el.find(".inputtype"))
+    $inputtypes.each (index, inputtype) =>
       classes = $(inputtype).attr('class').split(' ')
       for cls in classes
         bindMethod = @bindResetCorrectnessByInputtype[cls]
@@ -384,10 +385,16 @@ class @Problem
         if bindMethod?
           bindMethod(inputtype)
 
+  # Find all places where each input type displays its correct-ness
+  # Replace them with their original state--'unanswered'.
   bindResetCorrectnessByInputtype:
     # These are run at the scope of the capa inputtype
     # They should set handlers on each <input> to reset the whole.
-    {}
+    formulaequationinput: (element) ->
+      $(element).find('input').on 'input', ->
+        $p = $(element).find('p.status')
+        $p.text "unanswered"
+        $p.parent().removeClass().addClass "unanswered"
 
   inputtypeSetupMethods:
 
