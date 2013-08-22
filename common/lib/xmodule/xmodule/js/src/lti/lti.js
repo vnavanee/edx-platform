@@ -1,6 +1,6 @@
 window.LTI = function (element){
     var form = element.find('#ltiLaunchForm'),
-        frame = element.find('#ltiLaunchFrame');
+          frame = element.find('#ltiLaunchFrame');
 
     console.log('form = ', form);
     console.log('frame = ', frame);
@@ -9,12 +9,12 @@ window.LTI = function (element){
 
     return;
 
-	function init() {
+    function init() {
         console.log('We are in window.LTI function');
         console.log('element = ', element);
 
         form.submit();
 
-        frame.width(400).height(600);
+        frame.width(420).height(600);
     }
 }
