@@ -7,10 +7,10 @@
 
   % if user.is_authenticated():
     var group;
-    group = "without_indicator";
+    group = "Control";
     
     if (waffle.flag_is_active('ab_testing')) {
-        group = "with_indicator";
+        group = "Test";
     }
 
     analytics.identify("${ user.id }", {

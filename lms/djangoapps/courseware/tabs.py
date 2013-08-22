@@ -55,7 +55,6 @@ TabImpl = namedtuple('TabImpl', 'validator generator')
 
 
 #####  Generators for various tabs.
-
 def _courseware(tab, user, course, active_page):
     link = reverse('courseware', args=[course.id])
     return [CourseTab('Courseware', link, active_page == "courseware")]
@@ -63,6 +62,11 @@ def _courseware(tab, user, course, active_page):
 
 def _course_info(tab, user, course, active_page):
     link = reverse('info', args=[course.id])
+    return [CourseTab(tab['name'], link, active_page == "info")]
+
+
+def _course_content(tab, user, course, active_page):
+    link = reverse('info', args=[course_id])
     return [CourseTab(tab['name'], link, active_page == "info")]
 
 
@@ -227,6 +231,7 @@ def null_validator(d):
 VALID_TAB_TYPES = {
     'courseware': TabImpl(null_validator, _courseware),
     'course_info': TabImpl(need_name, _course_info),
+    'course_content': TabImpl(need_name, _course_content),
     'wiki': TabImpl(need_name, _wiki),
     'discussion': TabImpl(need_name, _discussion),
     'external_discussion': TabImpl(key_checker(['link']), _external_discussion),
@@ -337,6 +342,7 @@ def get_default_tabs(user, course, active_page):
     tabs = []
     tabs.extend(_courseware({''}, user, course, active_page))
     tabs.extend(_course_info({'name': 'Course Info'}, user, course, active_page))
+    tabs.extend(_course_content({'name': 'Course Content'}, user, course, active_page))
 
     if hasattr(course, 'syllabus_present') and course.syllabus_present:
         link = reverse('syllabus', args=[course.id])
