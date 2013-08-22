@@ -396,6 +396,21 @@ class @Problem
         $p.text "unanswered"
         $p.parent().removeClass().addClass "unanswered"
 
+    choicegroup: (element) ->
+      $element = $(element)
+      id = ($element.attr('id').match /^inputtype_(.*)$/)[1]
+      $element.find('input').on 'change', ->
+        $status = $("#status_#{id}")
+        if $status[0]  # We found a status icon.
+          $status.removeClass().addClass "unanswered"
+          $status.empty().css 'display', 'inline-block'
+        else
+          # Recreate the unanswered dot on left.
+          $element.find('div.indicator_container').append "<span class='unanswered' style='display:inline-block;' id='status_#{id}'></span>"
+
+        $element.find("label").removeClass()
+          .find('span').remove()
+
   inputtypeSetupMethods:
 
     'text-input-dynamath': (element) =>
