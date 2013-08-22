@@ -726,8 +726,8 @@ def badges(request, course_id):
     context = {
         'course': course,
         'student': request.user,
-        'badge_data': make_badge_data(request, course),
     }
+    context.update(make_badge_data(request.user.email, course))
 
     return render_to_response('courseware/badges.html', context)
 

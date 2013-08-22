@@ -9,16 +9,18 @@ $(document).ready(function() {
   badges_element.css("text-align", "center");
 
   var get_badges = function() {
-    var url = badge_service_url + "badges/?format=jsonp&email=" + email + "&badgeclass__issuer__course=" + course_id + "&callback=?";
+    var url = badge_service_url + "v1/badges/?format=jsonp&email=" + email + "&badgeclass__issuer__course=" + course_id + "&callback=?";
     return $.getJSON(url, function(data){});
   };
 
   var get_badgeclasses = function() {
-    var url = badge_service_url + "badgeclasses/?format=jsonp&issuer__course=" + course_id + "&callback=?";
+    var url = badge_service_url + "v1/badgeclasses/?format=jsonp&issuer__course=" + course_id + "&callback=?";
     return $.getJSON(url, function(data){});
   };
 
   var set_html_to_badges = function(element) {
+    //I'd like to terminate this process after a certain time, to prevent hanging when get_badges and
+    //get_badgeclasses are pinging the wrong URL. Not sure whether this is possible for a when().
     $.when(get_badges(), get_badgeclasses()).done(function(badges_data, badgeclasses_data) {
       var badges_list = badges_data[0].results;
       var badgeclasses_list = badgeclasses_data[0].results;
@@ -50,9 +52,11 @@ $(document).ready(function() {
   //Determine whether a badgeclass has been earned -- whether it is in badges_list.
   var is_earned = function(badgeclass, badges_list) {
     for (var i=0; i<badges_list.length; i++) {
-      if (badges_list[i].badge.indexOf(badgeclass.href) != -1) {
+      if (badges_list[i].badge.indexOf(badgeclass.edx_href) != -1) {
         return true;
       }
+      console.log(badges_list[i].badge);
+      console.log(badgeclass.edx_href);
     }
     return false;
   };
