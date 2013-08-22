@@ -56,7 +56,7 @@ def index_course(request):
         return HttpResponseBadRequest()
 
 
-def _find(request, course_id, page=1, current_filter="all"):
+def _find(request, course_id, page, current_filter):
     """
     Method in charge of getting search results and associated metadata
     """
@@ -74,11 +74,7 @@ def _find(request, course_id, page=1, current_filter="all"):
             },
             "size": "1000"
         }
-    index = ",".join(
-        [content_type + "-index" for content_type in CONTENT_TYPES if request.GET.get(content_type, False)]
-    )
-    if len(index) == 0:
-        index = ",".join([content + "-index" for content in CONTENT_TYPES])
+    index = ",".join([content + "-index" for content in CONTENT_TYPES])
 
     course_hash = hashlib.sha1(course_id).hexdigest()
     base_url = "/".join([database, index, course_hash])

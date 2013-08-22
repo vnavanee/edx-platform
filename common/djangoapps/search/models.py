@@ -15,6 +15,9 @@ import search.sorting
 from xmodule.modulestore import Location
 
 log = logging.getLogger(__name__)
+SOFT_MAX = 50
+WORD_MARGIN = 25
+
 
 class SearchResults(object):
     """
@@ -39,7 +42,7 @@ class SearchResults(object):
             sort = kwargs.get("sort", "relevance")
             self.entries = search.sorting.sort(entries, sort)
 
-    def get_category(self, category="all"):
+    def get_category(self, category):
         """
         Returns a subset of all results that match the given category
 
@@ -84,7 +87,7 @@ def _get_content_url(data, static_url):
     return substring
 
 
-def _snippet_generator(transcript, query, soft_max=50, word_margin=25):
+def _snippet_generator(transcript, query):
     """
     This returns a relevant snippet from a given search item with direct matches highlighted.
 
@@ -128,10 +131,10 @@ def _snippet_generator(transcript, query, soft_max=50, word_margin=25):
     snippet_start = next((i for i, sentence in enumerate(sentences) if stem_match(sentence)), 0)
     response = ""
     for sentence in sentences[snippet_start:]:
-        if (len(response.split()) + len(sentence.split()) < soft_max):
+        if (len(response.split()) + len(sentence.split()) < SOFT_MAX):
             response += " " + sentence
         else:
-            response += " " + " ".join(sentence.split()[:word_margin])
+            response += " " + " ".join(sentence.split()[:WORD_MARGIN])
             break
     response = _highlight_matches(query, response)
     return response
