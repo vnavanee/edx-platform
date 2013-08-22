@@ -26,6 +26,8 @@ class @Problem
     @$('section.action button.show').click @show
     @$('section.action input.save').click @save
 
+    @bindResetCorrectness()
+
     # Collapsibles
     Collapsible.setCollapsibles(@el)
 
@@ -369,6 +371,23 @@ class @Problem
     @$(".CodeMirror").each (index, element) ->
       element.CodeMirror.save() if element.CodeMirror.save
     @answers = @inputs.serialize()
+
+  bindResetCorrectness: ->
+    # Loop through all capa_inputtypes
+    # Bind the reset functions at that scope.
+    @el.find(".capa_inputtype").each (index, inputtype) =>
+      classes = $(inputtype).attr('class').split(' ')
+      for cls in classes
+        bindMethod = @bindResetCorrectnessByInputtype[cls]
+        # For debugging! Remove later
+        console.log $(inputtype).attr('id'), cls, typeof bindMethod
+        if bindMethod?
+          bindMethod(inputtype)
+
+  bindResetCorrectnessByInputtype:
+    # These are run at the scope of the capa inputtype
+    # They should set handlers on each <input> to reset the whole.
+    {}
 
   inputtypeSetupMethods:
 
