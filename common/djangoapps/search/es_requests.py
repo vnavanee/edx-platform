@@ -32,7 +32,7 @@ def flaky_request(method, url, attempts=2, **kwargs):
     return None
 
 
-class NoSearchableTextException(Exception):
+class MalformedDataException(Exception):
     """
     Basic Exception raised whenever searchable text cannot be found for an object
     """
@@ -170,18 +170,19 @@ class MongoIndexer(object):
             data = data.get("data", "")
         if "1.0" in data:
             uuids = data.split(",")
+            # In the case that we get a value that has any extra information past its closing
+            # quotation, it should be stripped to ensure a valid uuid
+            subtract_suffix = lambda word: word[:word.rfind("\"")] if "\"" in word else word
             # The colon is kind of a hack to make sure there will always be a second element since
             # some entries don't have a second entry
             # Example: <video youtube="1.0:uuid,1.50, someother_metadata"/>
-            subtract_suffix = lambda word: word[:word.rfind("\"")] if "\"" in word else word
             speed_map = {(entry + ":").split(":")[0]: (entry + ":").split(":")[1] for entry in uuids}
             uuid = [subtract_suffix(value) for key, value in speed_map.items() if "1.0" in key]
             if not uuid:
-                print "uhoh"
-                raise NoSearchableTextException
+                raise MalformedDataException
             return uuid[0]
         else:
-            raise NoSearchableTextException
+            raise MalformedDataException
 
     def _get_thumbnail_from_video_module(self, video_module):
         """
@@ -233,7 +234,7 @@ class MongoIndexer(object):
         # Removes all lingering tags
         remove_tags = re.sub(r"<[a-zA-Z0-9/\.\= \"\'_-]+>", "", cleaned_text)
         if not remove_tags.strip():
-            raise NoSearchableTextException
+            raise MalformedDataException
         return remove_tags
 
     def _find_transcript_for_video_module(self, video_module):
@@ -247,14 +248,14 @@ class MongoIndexer(object):
         if isinstance(data, dict):  # For some reason there are nested versions
             data = data.get("data", "")
         if isinstance(data, unicode) is False:  # for example videos
-            raise NoSearchableTextException
+            raise MalformedDataException
         uuid = self._get_uuid_from_video_module(video_module)
         name_pattern = re.compile(".*" + uuid + ".*")
         chunk = (
             self._chunk_collection.find_one({"files_id.name": name_pattern})
         )
         if chunk is None:
-            raise NoSearchableTextException
+            raise MalformedDataException
         else:
             try:
                 chunk_data = chunk["data"].decode('utf-8')
@@ -263,7 +264,7 @@ class MongoIndexer(object):
                     # This is an obscure, barely documented occurance where apple broke tarballs
                     # and decided to shove error messages into tar metadata which causes this.
                     # https://discussions.apple.com/thread/3145071?start=0&tstart=0
-                    raise NoSearchableTextException
+                    raise MalformedDataException
                 else:
                     try:
                         return " ".join(filter(None, json.loads(chunk_data)["text"]))
@@ -271,7 +272,7 @@ class MongoIndexer(object):
                         log.error("Transcript for: " + uuid + " is invalid")
                         return chunk_data
             except UnicodeError:
-                raise NoSearchableTextException
+                raise MalformedDataException
 
     def _get_searchable_text(self, mongo_module, type_):
         """
@@ -366,7 +367,7 @@ class MongoIndexer(object):
                     index = "problem-index"
                 else:
                     continue
-            except NoSearchableTextException:
+            except MalformedDataException:
                 continue
             index_string += self._get_bulk_index_item(index, data)
             error_string += item["_id"]["name"] + "\n"

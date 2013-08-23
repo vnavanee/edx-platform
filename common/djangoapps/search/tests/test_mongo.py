@@ -11,7 +11,7 @@ from django.test.utils import override_settings
 from pymongo import MongoClient
 from pyfuzz.generator import random_item
 
-from search.es_requests import MongoIndexer, NoSearchableTextException
+from search.es_requests import MongoIndexer, MalformedDataException
 
 
 def dummy_document(key, values, data_type, **kwargs):
@@ -68,7 +68,7 @@ class MongoTest(TestCase):
         success = False
         try:
             self.indexer._find_transcript_for_video_module(test_bad_transcript), [""]
-        except NoSearchableTextException:
+        except MalformedDataException:
             success = True
         self.assertTrue(success)
 
@@ -82,7 +82,7 @@ class MongoTest(TestCase):
         success = False
         try:
             bad_check = self.indexer._get_searchable_text_from_problem_data(bad_document)
-        except NoSearchableTextException:
+        except MalformedDataException:
             success = True
         self.assertTrue(success)
 
@@ -97,7 +97,7 @@ class MongoTest(TestCase):
         success = False
         try:
             image = self.indexer._get_thumbnail_from_video_module(document)
-        except NoSearchableTextException:
+        except MalformedDataException:
             success = True
         self.assertTrue(success)
 

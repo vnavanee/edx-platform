@@ -4,7 +4,10 @@
 This is the testing suite for the models within the search module
 """
 
+from collections import namedtuple
+
 import json
+import re
 from django.test import TestCase
 from django.test.utils import override_settings
 from pyfuzz.generator import random_regex
@@ -62,6 +65,10 @@ class ModelTest(TestCase):
     Tests SearchResults and SearchResult models as well as associated helper functions
     """
 
+    def test_search_result_init(self):
+        check = SearchResult(dummy_entry(1.0), ["fake-query"])
+        self.assertTrue(bool(re.match(r"^[a-zA-Z0-9]+$", check.snippets)))
+
     def test_snippet_generation(self):
         document = dummy_entry(1.0, TEST_TEXT)
         result = SearchResult(document, [u"quis nostrud"])
@@ -77,7 +84,7 @@ class ModelTest(TestCase):
         result = SearchResult(document, [u"νου στην όπου"])
         self.assertTrue(result.snippets.startswith(u"Είχε γιου"))
 
-    def test_search_result(self):
+    def test_search_results(self):
         scores = [1.0, 5.2, 2.0, 123.2]
         hits = [dummy_entry(score) for score in scores]
         full_return = FakeResponse({"hits": {"hits": hits}})

@@ -20,11 +20,15 @@ log = logging.getLogger(__name__)
 """    
 The soft_max is the number of words at which we stop actively indexing (normally the snippeting works
 on full sentences, so when the soft_max is reached the snippet will stop at the end of that sentence.)
+"""
 
+SOFT_MAX = 50
+
+"""
 The word margin is the maximum number of words past the soft max we allow the snippet to go. This might
 result in truncated snippets.
 """
-SOFT_MAX = 50
+
 WORD_MARGIN = 25
 
 
@@ -38,12 +42,12 @@ class SearchResults(object):
     """
 
     def __init__(self, response, **kwargs):
-        """kwargs should be the GET parameters from the original search request
-        filters needs to be a dictionary that maps fields to allowed values"""
+        """
+        kwargs should be the GET parameters from the original search request
+        filters needs to be a dictionary that maps fields to allowed values
+        """
         raw_results = json.loads(response.content).get("hits", {"hits": []})["hits"]
-        print kwargs
         self.query = kwargs.get("s", "")
-        log.debug(self.query)
         if not self.query:
             self.entries = []
         else:

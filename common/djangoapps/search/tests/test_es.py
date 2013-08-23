@@ -5,7 +5,6 @@ Tests for the ElasticDatabase class in es_requests
 import json
 import time
 import os
-from BaseHTTPServer import BaseHTTPRequestHandler
 
 from django.test import TestCase
 import requests
