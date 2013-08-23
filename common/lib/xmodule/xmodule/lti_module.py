@@ -58,18 +58,15 @@ class LTIModule(LTIFields, XModule):
             client_key=unicode(self.client_key),
             client_secret=unicode(self.client_secret)
         )
-        # Please set content-type to application/x-www-form-urlencoded
         body1 = {
             'user_id': 'default_user_id',
             'oauth_callback': 'about:blank',
-            'launch_presentation_return_url': 'http://www.imsglobal.org/developers/LTI/test/v1p1/lms_return.php',
-            'lis_outcome_service_url': 'http://www.imsglobal.org/developers/LTI/test/v1p1/common/tool_consumer_outcome.php?b64=NWM2YjkwMjAtMDY2YS0xMWUzLThmZmQtMDgwMDIwMGM5YTY2Ojo6NzU0MTNmMzIyYTdiNGU3NjIyM2UzMzJjNjI1ZjNkMzQ=',
-            'lis_result_sourcedid': 'feb-123-456-2929::28883',
+            'lis_outcome_service_url': '',
+            'lis_result_sourcedid': '',
+            'launch_presentation_return_url': '',
             'lti_message_type': 'basic-lti-launch-request',
             'lti_version': 'LTI-1p0',
-            'instructor': 'test'
         }
-        # launch_presentation_return_url = http://www.imsglobal.org/developers/LTI/test/v1p1/lms_return.php
         header1= {
             'Authorization': requests.auth.CONTENT_TYPE_FORM_URLENCODED,
             'Content-Type': 'application/x-www-form-urlencoded'
