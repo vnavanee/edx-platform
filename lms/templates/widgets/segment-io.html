@@ -10,12 +10,12 @@
     group = "Control";
     
     if (waffle.flag_is_active('visual_treatment')) {
-        group = "Visual Treatment Test";
+        group = "Visual Treatment Experiment";
     }
 
     // Tab Merge experiment takes prominence - it's a superset of Visual Treatment
     if (waffle.flag_is_active('tab_merge')) {
-        group = "Tab Merge Test";
+        group = "Tab Merge Experiment";
     }
 
     analytics.identify("${ user.id }", {
