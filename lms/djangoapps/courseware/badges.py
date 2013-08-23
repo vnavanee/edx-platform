@@ -34,7 +34,7 @@ def _fetch(url):
             while next_url is not None:
                 next_obj = requests.get(next_url, timeout=10).json  # pylint: disable=E1103
                 results.extend(next_obj.get('results', []))
-                next_url = obj.get('next', None)
+                next_url = next_obj.get('next', None)
 
             return results
 
@@ -46,8 +46,13 @@ def _fetch(url):
         return []
 
 
-def make_badge_data(email, course=None):
+def make_badge_data(email, course_id=None):
     """
+    Performs GET requests to the badge service to return data suitable for displaying badges.
+
+    `email` -- the email of the badge recipient (i.e. student)
+    `course_id` -- a course id
+
     Returns a dictionary:
         'badges': a dictionary --
             {badge's badgeclass's href: badge data, for badge in all badges this student has earned}
@@ -59,14 +64,14 @@ def make_badge_data(email, course=None):
             each earned badge may be accessed, at the badge service
     """
 
-    if course is not None:
+    if course_id is not None:
 
         # Filter badges by the student's email and by the course ID.
         badges_url = 'v1/badges/.json?badgeclass__issuer__course={course}&email={email}'
-        raw_badges = _fetch(badges_url.format(course=course.id, email=email))
+        raw_badges = _fetch(badges_url.format(course=course_id, email=email))
 
         # Get the list of all badgeclasses for this course.
-        raw_badgeclasses = _fetch('v1/badgeclasses/.json?issuer__course={course}'.format(course=course.id))
+        raw_badgeclasses = _fetch('v1/badgeclasses/.json?issuer__course={course}'.format(course=course_id))
 
     else:
         # No course: only filter badges by the student's email, and display no unearned badges.
