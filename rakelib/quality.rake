@@ -38,7 +38,7 @@ end
     namespace :pep8 do
         desc "Run pep8 on all #{system} code"
         task system => [report_dir, :install_python_prereqs] do
-            sh("pep8 #{system} | tee #{report_dir}/pep8.report")
+            sh("pep8 --exclude='*/migrations*' #{system} | tee #{report_dir}/pep8.report")
         end
     end
     task :pep8 => :"pep8:#{system}"
