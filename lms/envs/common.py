@@ -453,6 +453,14 @@ MOCK_STAFF_GRADING = False
 ################################# Jasmine ###################################
 JASMINE_TEST_DIRECTORY = PROJECT_ROOT + '/static/coffee'
 
+################################# Waffle ###################################
+
+# Name prepended to cookies set by Waffle
+WAFFLE_COOKIE = "waffle_%s"
+
+# One week, since our average experiment length will be one week
+WAFFLE_MAX_AGE = 604800
+
 ################################# Middleware ###################################
 # List of finder classes that know how to find static files in
 # various locations.
