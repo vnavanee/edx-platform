@@ -164,6 +164,6 @@ $(document).ready(function(){
         paginate($("p.pagination-stub").eq(0));
     }
 
-    $("ul.menu li").bind("click", changeFilter);
+    $("ul.filter-menu li").bind("click", changeFilter);
 });
 

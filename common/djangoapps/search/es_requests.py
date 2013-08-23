@@ -10,6 +10,7 @@ from itertools import chain
 
 import json
 import requests
+import lxml.html
 from requests.exceptions import RequestException
 from django.conf import settings
 from pymongo import MongoClient
@@ -170,14 +171,16 @@ class MongoIndexer(object):
         uuids = data.split(",")
         # Videos with a single speed still include commas. If a speed is completely lacking
         # uuids will only be of length 1, but that seems to be the only case.
-        if len(uuids) == 1:  # Some videos are just left over demos without links
-            return None
+        if len(uuids) <= 1:  # Some videos are just left over demos without links
+            raise NoSearchableTextException
         # The colon is kind of a hack to make sure there will always be a second element since
         # some entries don't have a second entry
         # Example: <video youtube="1.0:uuid,1.50, someother_metadata"/>
         speed_map = {(entry + ":").split(":")[0]: (entry + ":").split(":")[1] for entry in uuids}
-        uuid = [value for key, value in speed_map.items() if "1.0" in key][0]
-        return uuid
+        uuid = [value for key, value in speed_map.items() if "1.0" in key]
+        if not uuid:
+            raise NoSearchableTextException
+        return uuid[0]
 
     def _get_thumbnail_from_video_module(self, video_module):
         """
@@ -204,10 +207,10 @@ class MongoIndexer(object):
         Otherwise there will be no thumbnail for the problem
         """
 
-        img_src_pattern = r"<img[^>]+src=\"([^\"]+)\""
-        first_image = re.search(img_src_pattern, html, re.DOTALL)
-        if first_image is not None:
-            return first_image.group(1)
+        html_document = lxml.html.fromstring(html)
+        images = html_document.cssselect('img')
+        if len(images) > 0:
+            return images[0].attrib('src')
         else:
             return ""
 
@@ -219,19 +222,18 @@ class MongoIndexer(object):
         """
 
         data = mongo_element["definition"]["data"]
-        # Grabs all text in paragraph tags. Explanation is a header that appears a lot, so it's thrown out.
-        paragraphs = " ".join([text for text in re.findall(r"<p>(.*?)</p>", data)])
-        paragraphs += " "
+        # Grabs all text in paragraph tags.
+        paragraphs = [text for text in re.findall(r"<p>(.*?)</p>", data)]
         # Grabs all text between text tags, which is the most common container after paragraph tags.
-        paragraphs += " ".join([text for text in re.findall(r"<text>(.*?)</text>", data)])
+        text_groups = [text for text in re.findall(r"<text>(.*?)</text>", data)]
+        full_text = "%s %s" % (" ".join(paragraphs), " ".join(text_groups))
         # This gets rid of things like latex strings and other non-human readable escaped passages
-        cleaned_text = re.sub(r"\\(.*?\\)", "", paragraphs).replace("\\", "")
+        cleaned_text = re.sub(r"\\(.*?\\)", "", full_text).replace("\\", "")
         # Removes all lingering tags
         remove_tags = re.sub(r"<[a-zA-Z0-9/\.\= \"\'_-]+>", "", cleaned_text)
-        if not remove_tags:
+        if not remove_tags.strip():
             raise NoSearchableTextException
-        else:
-            return remove_tags
+        return remove_tags
 
     def _find_transcript_for_video_module(self, video_module):
         """
@@ -246,10 +248,7 @@ class MongoIndexer(object):
         if isinstance(data, unicode) is False:  # for example videos
             raise NoSearchableTextException
         uuid = self._get_uuid_from_video_module(video_module)
-        if uuid is None:
-            raise NoSearchableTextException
-        else:
-            name_pattern = re.compile(".*" + uuid + ".*")
+        name_pattern = re.compile(".*" + uuid + ".*")
         chunk = (
             self._chunk_collection.find_one({"files_id.name": name_pattern})
         )
@@ -282,6 +281,8 @@ class MongoIndexer(object):
             return self._get_searchable_text_from_problem_data(mongo_module)
         elif type_.lower() == "transcript":
             return self._find_transcript_for_video_module(mongo_module)
+        else:
+            raise NotImplementedError
 
     def _get_thumbnail(self, mongo_module, type_):
         """
@@ -291,10 +292,11 @@ class MongoIndexer(object):
         """
 
         if type_.lower() == "problem":
-            thumbnail = self._get_thumbnail_from_html(mongo_module["definition"]["data"])
+            return self._get_thumbnail_from_html(mongo_module["definition"]["data"])
         elif type_.lower() == "transcript":
-            thumbnail = self._get_thumbnail_from_video_module(mongo_module)
-        return thumbnail
+            return self._get_thumbnail_from_video_module(mongo_module)
+        else:
+            raise NotImplementedError
 
     def _get_full_dict(self, mongo_module, type_):
         """
@@ -315,8 +317,11 @@ class MongoIndexer(object):
             mongo_module.get("metadata", {}).get("display_name", "") +
             " (" + mongo_module["_id"]["course"] + ")"
         )
-        searchable_text = self._get_searchable_text(mongo_module, type_)
-        thumbnail = self._get_thumbnail(mongo_module, type_)
+        try:
+            searchable_text = self._get_searchable_text(mongo_module, type_)
+            thumbnail = self._get_thumbnail(mongo_module, type_)
+        except NotImplementedError:
+            raise NoSearchableTextException
         type_hash = hashlib.sha1(course_id).hexdigest()
         return {
             "id": id_,
@@ -347,15 +352,16 @@ class MongoIndexer(object):
         index_string = ""
         error_string = ""
         for item in cursor:
-            counter += 1
             category = item["_id"]["category"].lower().strip()
             data = {}
             index = ""
             try:
                 if category == "video":
+                    counter += 1
                     data = self._get_full_dict(item, "transcript")
                     index = "transcript-index"
                 elif category == "problem":
+                    counter += 1
                     data = self._get_full_dict(item, "problem")
                     index = "problem-index"
                 else:

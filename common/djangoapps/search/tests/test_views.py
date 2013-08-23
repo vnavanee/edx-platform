@@ -36,7 +36,7 @@ class ViewTest(TestCase):
     @override_settings(ES_DATABASE="http://127.0.0.1:9203")
     def test_basic_view(self):
         fake_request = namedtuple("Request", "GET")
-        response = views._find(fake_request({}), "org/test-course/run", 1)
+        response = views._find(fake_request({}), "org/test-course/run", 1, "all")
         self.assertFalse(response["results"])
         self.assertEqual(response["old_query"], "*.*")
         self.assertTrue(isinstance(response['data'], SearchResults))

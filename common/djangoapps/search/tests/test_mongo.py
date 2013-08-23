@@ -79,8 +79,12 @@ class MongoTest(TestCase):
         self.assertEquals(check, "This is a test and so is this")
 
         bad_document = {"definition": {"data": "@#@%^%#$afsdkjjl@#!$%"}}
-        bad_check = self.indexer._get_searchable_text_from_problem_data(bad_document)
-        self.assertEquals(bad_check, " ")
+        success = False
+        try:
+            bad_check = self.indexer._get_searchable_text_from_problem_data(bad_document)
+        except NoSearchableTextException:
+            success = True
+        self.assertTrue(success)
 
     def test_youku_video(self):
         document = {"definition": {"data": "player.youku.com"}}
@@ -89,7 +93,7 @@ class MongoTest(TestCase):
         self.assertEquals(image, url)
 
     def test_bad_video(self):
-        document = {"definition": {"data": "blank"}}
+        document = {"definition": {"data": "<video youtube=\"1.0:asdfghjkl\">"}}
         image = self.indexer._get_thumbnail_from_video_module(document)
         url = "http://img.youtube.com"
         self.assertEquals(image, url)
