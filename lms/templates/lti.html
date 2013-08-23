@@ -4,7 +4,7 @@
     ## module JavaScript will trigget a "submit" on the form, and the
     ## result will be rendered to the below iFrame.
     <form
-        action="https://bc-staging.vitalsource.com/books/1-889325-26-0"
+        action="${lti_url}"
         name="ltiLaunchForm"
         id="ltiLaunchForm"
         method="post"
@@ -25,9 +25,8 @@
     <input type="hidden" name="oauth_version" value="1.0"/>
     <input type="hidden" name="user_id" value="default_user_id">
     
-    
     <input type="hidden" name="oauth_signature" value="${oauth_signature}"/>
-    <input type="submit" value="Press to Launch" style="display: none;"/>
+    <input type="submit" value="Press to Launch" style="display: none"/>
 
     </form>
 
