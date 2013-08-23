@@ -168,19 +168,20 @@ class MongoIndexer(object):
         data = video_module.get("definition", {}).get("data", "")
         if isinstance(data, dict):
             data = data.get("data", "")
-        uuids = data.split(",")
-        # Videos with a single speed still include commas. If a speed is completely lacking
-        # uuids will only be of length 1, but that seems to be the only case.
-        if len(uuids) <= 1:  # Some videos are just left over demos without links
+        if "1.0" in data:
+            uuids = data.split(",")
+            # The colon is kind of a hack to make sure there will always be a second element since
+            # some entries don't have a second entry
+            # Example: <video youtube="1.0:uuid,1.50, someother_metadata"/>
+            subtract_suffix = lambda word: word[:word.rfind("\"")] if "\"" in word else word
+            speed_map = {(entry + ":").split(":")[0]: (entry + ":").split(":")[1] for entry in uuids}
+            uuid = [subtract_suffix(value) for key, value in speed_map.items() if "1.0" in key]
+            if not uuid:
+                print "uhoh"
+                raise NoSearchableTextException
+            return uuid[0]
+        else:
             raise NoSearchableTextException
-        # The colon is kind of a hack to make sure there will always be a second element since
-        # some entries don't have a second entry
-        # Example: <video youtube="1.0:uuid,1.50, someother_metadata"/>
-        speed_map = {(entry + ":").split(":")[0]: (entry + ":").split(":")[1] for entry in uuids}
-        uuid = [value for key, value in speed_map.items() if "1.0" in key]
-        if not uuid:
-            raise NoSearchableTextException
-        return uuid[0]
 
     def _get_thumbnail_from_video_module(self, video_module):
         """
@@ -282,6 +283,7 @@ class MongoIndexer(object):
         elif type_.lower() == "transcript":
             return self._find_transcript_for_video_module(mongo_module)
         else:
+            log.error("%s is not a recognized type" % type_)
             raise NotImplementedError
 
     def _get_thumbnail(self, mongo_module, type_):
@@ -296,6 +298,7 @@ class MongoIndexer(object):
         elif type_.lower() == "transcript":
             return self._get_thumbnail_from_video_module(mongo_module)
         else:
+            log.error("%s is not a recognized type" % type_)
             raise NotImplementedError
 
     def _get_full_dict(self, mongo_module, type_):
@@ -317,11 +320,8 @@ class MongoIndexer(object):
             mongo_module.get("metadata", {}).get("display_name", "") +
             " (" + mongo_module["_id"]["course"] + ")"
         )
-        try:
-            searchable_text = self._get_searchable_text(mongo_module, type_)
-            thumbnail = self._get_thumbnail(mongo_module, type_)
-        except NotImplementedError:
-            raise NoSearchableTextException
+        searchable_text = self._get_searchable_text(mongo_module, type_)
+        thumbnail = self._get_thumbnail(mongo_module, type_)
         type_hash = hashlib.sha1(course_id).hexdigest()
         return {
             "id": id_,

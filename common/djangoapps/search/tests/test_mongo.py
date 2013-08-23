@@ -93,10 +93,13 @@ class MongoTest(TestCase):
         self.assertEquals(image, url)
 
     def test_bad_video(self):
-        document = {"definition": {"data": "<video youtube=\"1.0:asdfghjkl\">"}}
-        image = self.indexer._get_thumbnail_from_video_module(document)
-        url = "http://img.youtube.com"
-        self.assertEquals(image, url)
+        document = {"definition": {"data": "<video asdfghjkl>"}}
+        success = False
+        try:
+            image = self.indexer._get_thumbnail_from_video_module(document)
+        except NoSearchableTextException:
+            success = True
+        self.assertTrue(success)
 
     def test_good_thumbnail(self):
         test_string = '<video youtube=\"0.75:-gKKUBQ2NWA,1.0:dJvsFg10JY,1.25:lm3IKbRE2VA,1.50:Pz0XiZ8wO9o\">'
