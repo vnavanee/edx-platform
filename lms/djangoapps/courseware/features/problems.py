@@ -83,13 +83,21 @@ def answer_problem_step(step, problem_type, correctness):
     *problem_type* is a string representing the type of problem (e.g. 'drop down')
     *correctness* is in ['correct', 'incorrect']
     """
-
-    assert(correctness in ['correct', 'incorrect'])
-    assert(problem_type in PROBLEM_DICT)
-    answer_problem(problem_type, correctness)
+    # Change the answer on the page
+    input_problem_answer(step, problem_type, correctness)
 
     # Submit the problem
     check_problem(step)
+
+
+@step(u'I input an answer on a "([^"]*)" problem "([^"]*)ly"')
+def input_problem_answer(_, problem_type, correctness):
+    """
+    Have the browser input an answer (either correct or incorrect)
+    """
+    assert(correctness in ['correct', 'incorrect'])
+    assert(problem_type in PROBLEM_DICT)
+    answer_problem(problem_type, correctness)
 
 
 @step(u'I check a problem')
@@ -147,7 +155,7 @@ def see_score(_step, score):
     assert world.browser.is_text_present(score)
 
 
-@step(u'My "([^"]*)" answer is marked "([^"]*)"')
+@step(u'[Mm]y "([^"]*)" answer is marked "([^"]*)"')
 def assert_answer_mark(step, problem_type, correctness):
     """
     Assert that the expected answer mark is visible
