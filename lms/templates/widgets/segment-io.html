@@ -7,15 +7,15 @@
 
   % if user.is_authenticated():
     var group;
-    group = "Control";
+    group = "Control Group";
     
     if (waffle.flag_is_active('visual_treatment')) {
-        group = "Visual Treatment Experiment";
+        group = "Visual Treatment Group";
     }
 
-    // Tab Merge experiment takes prominence - it's a superset of Visual Treatment
+    // Tab Merge group takes prominence - it's a superset of Visual Treatment
     if (waffle.flag_is_active('tab_merge')) {
-        group = "Tab Merge Experiment";
+        group = "Tab Merge Group";
     }
 
     analytics.identify("${ user.id }", {
