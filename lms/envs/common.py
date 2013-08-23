@@ -456,10 +456,10 @@ JASMINE_TEST_DIRECTORY = PROJECT_ROOT + '/static/coffee'
 ################################# Waffle ###################################
 
 # Name prepended to cookies set by Waffle
-WAFFLE_COOKIE = "waffle_%s"
+WAFFLE_COOKIE = "waffle_flag_%s"
 
-# One week (in sec), since our average experiment length will be one week
-WAFFLE_MAX_AGE = 604800
+# Two days (in sec)
+WAFFLE_MAX_AGE = 172800
 
 ################################# Middleware ###################################
 # List of finder classes that know how to find static files in
